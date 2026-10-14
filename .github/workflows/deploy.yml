@@ -1,0 +1,67 @@
+# main ブランチに push されたら、Xserver（レンタルサーバー）へ自動でアップロードする。
+# 設定手順は docs/deploy-xserver.md を参照。
+# リポジトリの Variables に XSERVER_DEPLOY=true を設定するまでは動かない。
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    if: ${{ vars.XSERVER_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      APP_DIR: ${{ vars.XSERVER_APP_DIR || 'kizuna-entry' }}
+      PHP_BIN: ${{ vars.XSERVER_PHP || '/usr/bin/php8.3' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, intl
+          coverage: none
+
+      - name: Test
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          cp .env.example .env && php artisan key:generate
+          php artisan test
+
+      - name: Install production dependencies
+        run: |
+          rm .env
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.XSERVER_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -p "${{ secrets.XSERVER_PORT || '10022' }}" "${{ secrets.XSERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploy -p ${{ secrets.XSERVER_PORT || '10022' }}" \
+            --exclude '.git/' --exclude '.github/' --exclude 'tests/' --exclude 'node_modules/' \
+            --exclude '/.env' --exclude '/storage/' --exclude '/database/database.sqlite' \
+            ./ "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}:${APP_DIR}/"
+
+      - name: Migrate and cache
+        run: |
+          ssh -i ~/.ssh/id_deploy -p "${{ secrets.XSERVER_PORT || '10022' }}" \
+            "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}" "
+            set -e
+            cd ${APP_DIR}
+            test -f .env || { echo '.env がありません。docs/deploy-xserver.md の手順で作成してください。'; exit 1; }
+            mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+            ${PHP_BIN} artisan down --retry=30 || true
+            trap '${PHP_BIN} artisan up' EXIT
+            ${PHP_BIN} artisan migrate --force
+            ${PHP_BIN} artisan optimize
+          "
