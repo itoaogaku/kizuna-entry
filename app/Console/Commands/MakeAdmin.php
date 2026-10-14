@@ -15,7 +15,7 @@ class MakeAdmin extends Command
     {
         $user = User::where('email', $this->argument('email'))->first();
         if (! $user) {
-            $this->error('そのメールアドレスのアカウントはありません。先に /register で登録してください。');
+            $this->error('そのメールアドレスのアカウントはありません。先に /team/register で登録してください。');
 
             return self::FAILURE;
         }

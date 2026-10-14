@@ -9,8 +9,9 @@ use Illuminate\Database\Seeder;
 
 /**
  * 動作確認用のデータ。本番では実行しない。
- *   運営：admin@example.com / password
- *   チーム：team@example.com / password
+ *   運営（団体申し込み）：団体名「絆記録会 運営」 / password
+ *   団体（団体申し込み）：団体名「絆AC」 / password
+ *   個人（個人申し込み）：solo@example.com / password
  */
 class DatabaseSeeder extends Seeder
 {
@@ -41,6 +42,16 @@ class DatabaseSeeder extends Seeder
                 'gender' => $g, 'birthdate' => $b, 'category' => $c,
             ]);
         }
+
+        $solo = User::factory()->individual()->create([
+            'name' => '中村 光',
+            'team_name' => '〇〇大学',
+            'email' => 'solo@example.com',
+        ]);
+        Athlete::factory()->for($solo)->create([
+            'last_name' => '中村', 'first_name' => '光', 'last_kana' => 'ナカムラ', 'first_kana' => 'ヒカル',
+            'gender' => 'M', 'birthdate' => '2003-02-14', 'category' => '一般',
+        ]);
 
         $meet = Meet::factory()->create([
             'name' => '第1回 絆記録会',

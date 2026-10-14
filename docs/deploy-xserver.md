@@ -90,11 +90,11 @@ ln -s ~/kizuna-entry/public entry
 
 ## 5. 運営アカウントを作る
 
-1. `https://entry.example.com/register` で運営用のアカウントを登録する。
+1. `https://entry.example.com/team/register` で運営用の団体（例：団体名「絆記録会 運営」）を登録する。
 2. SSH で次を実行して、管理画面を使えるようにする。
 
 ```sh
-cd ~/kizuna-entry && /usr/bin/php8.3 artisan kizuna:make-admin 運営のメールアドレス
+cd ~/kizuna-entry && /usr/bin/php8.3 artisan kizuna:make-admin 登録したメールアドレス
 ```
 
 ## 6. Stripe の設定

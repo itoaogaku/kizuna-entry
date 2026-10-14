@@ -50,12 +50,13 @@ class EntryController extends Controller
         return response()->streamDownload(function () use ($items) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
-            fputcsv($out, ['受付番号', '種目', '氏名', 'フリガナ', '性別', '生年月日', '区分', '陸連登録番号', '所属', '申告記録', '参加費', '状態', '入金日時', '代表者', '電話番号', 'メール']);
+            fputcsv($out, ['受付番号', '申込区分', '種目', '氏名', 'フリガナ', '性別', '生年月日', '区分', '陸連登録番号', '所属', '申告記録', '参加費', '状態', '入金日時', '申込者', '電話番号', 'メール']);
             foreach ($items as $item) {
                 $a = $item->athlete;
                 $e = $item->entry;
                 fputcsv($out, array_map(fn ($v) => self::safeCell($v), [
                     $e->id,
+                    $e->user->typeLabel(),
                     $item->event->name,
                     $a->fullName(),
                     $a->fullKana(),

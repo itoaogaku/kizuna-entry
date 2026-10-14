@@ -2,12 +2,17 @@
 @section('title', '選手登録')
 
 @section('content')
-    <h1>選手登録（{{ auth()->user()->team_name }}）</h1>
-    <p class="muted">ここに登録した選手が、エントリー画面の一覧に表示されます。卒業・引退した選手は「エントリー対象外」にすると一覧から外れます。</p>
-    <div class="actions" style="margin-bottom:16px">
-        <a class="btn" href="{{ route('athletes.create') }}">選手を追加</a>
-        <a class="btn secondary" href="{{ route('athletes.import') }}">Excel（CSV）でまとめて登録</a>
-    </div>
+    @if (auth()->user()->isTeam())
+        <h1>選手登録（{{ auth()->user()->team_name }}）</h1>
+        <p class="muted">ここに登録した選手が、エントリー画面の一覧に表示されます。卒業・引退した選手は「エントリー対象外」にすると一覧から外れます。</p>
+        <div class="actions" style="margin-bottom:16px">
+            <a class="btn" href="{{ route('athletes.create') }}">選手を追加</a>
+            <a class="btn secondary" href="{{ route('athletes.import') }}">Excel（CSV）でまとめて登録</a>
+        </div>
+    @else
+        <h1>登録情報</h1>
+        <p class="muted">エントリーに使う選手情報です。内容が変わったときは「編集」から更新してください。</p>
+    @endif
 
     @if ($athletes->isEmpty())
         <div class="card"><p>まだ選手が登録されていません。</p></div>

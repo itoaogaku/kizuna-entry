@@ -1,4 +1,6 @@
+@if ($entry->user->isTeam())
 {{ $entry->user->team_name }}
+@endif
 {{ $entry->user->name }} 様
 
 {{ $entry->meet->name }}へのエントリーと参加費の入金を確認しました。

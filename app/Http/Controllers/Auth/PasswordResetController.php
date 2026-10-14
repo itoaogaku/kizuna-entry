@@ -51,6 +51,6 @@ class PasswordResetController extends Controller
                 ->withErrors(['email' => 'リンクの有効期限が切れているか、正しくありません。もう一度お試しください。']);
         }
 
-        return redirect()->route('login')->with('status', 'パスワードを再設定しました。ログインしてください。');
+        return redirect()->route('home')->with('status', 'パスワードを再設定しました。「団体申し込み」または「個人申し込み」からログインしてください。');
     }
 }

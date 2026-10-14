@@ -57,7 +57,7 @@ class AdminTest extends TestCase
             ->assertOk()
             ->streamedContent();
 
-        $this->assertStringStartsWith("\xEF\xBB\xBF受付番号,種目,氏名", $csv);
+        $this->assertStringStartsWith("\xEF\xBB\xBF受付番号,申込区分,種目,氏名", $csv);
         $this->assertStringContainsString('一般男子5000m,"青山 駿"', $csv);
         $this->assertStringContainsString("'=CMD()", $csv);
         $this->assertSame(2, substr_count(trim($csv), "\n") + 1); // 見出し＋入金済み1件

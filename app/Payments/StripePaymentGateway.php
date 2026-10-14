@@ -47,7 +47,7 @@ class StripePaymentGateway implements PaymentGateway
             'metadata' => ['entry_id' => (string) $entry->id],
             'payment_intent_data' => [
                 'metadata' => ['entry_id' => (string) $entry->id],
-                'description' => $entry->meet->name.' エントリー #'.$entry->id.'（'.$entry->user->team_name.'）',
+                'description' => $entry->meet->name.' エントリー #'.$entry->id.'（'.$entry->user->displayName().'）',
             ],
             'expires_at' => now()->addMinutes(60)->timestamp,
             'success_url' => $successUrl.(str_contains($successUrl, '?') ? '&' : '?').'session_id={CHECKOUT_SESSION_ID}',

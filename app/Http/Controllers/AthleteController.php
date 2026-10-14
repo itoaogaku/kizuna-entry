@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Athlete;
+use App\Rules\AthleteRules;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -27,13 +27,16 @@ class AthleteController extends Controller
         return view('athletes.index', compact('athletes'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $this->denyIndividual($request);
+
         return view('athletes.form', ['athlete' => new Athlete(['gender' => 'M', 'is_active' => true])]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->denyIndividual($request);
         $request->user()->athletes()->create($this->validated($request->all()));
 
         return redirect()->route('athletes.index')->with('status', '選手を登録しました。');
@@ -49,13 +52,21 @@ class AthleteController extends Controller
     public function update(Request $request, Athlete $athlete): RedirectResponse
     {
         $this->authorizeOwner($request, $athlete);
+        if ($request->user()->isIndividual()) {
+            $athlete->update($this->validated($request->all()));
+            $request->user()->update(['name' => $athlete->fullName()]);
+
+            return redirect()->route('athletes.index')->with('status', '登録情報を更新しました。');
+        }
         $athlete->update($this->validated($request->all()) + ['is_active' => $request->boolean('is_active')]);
 
         return redirect()->route('athletes.index')->with('status', '選手情報を更新しました。');
     }
 
-    public function importForm(): View
+    public function importForm(Request $request): View
     {
+        $this->denyIndividual($request);
+
         return view('athletes.import', ['header' => self::CSV_HEADER]);
     }
 
@@ -75,6 +86,7 @@ class AthleteController extends Controller
      */
     public function import(Request $request): RedirectResponse
     {
+        $this->denyIndividual($request);
         $request->validate(['csv' => ['required', 'file', 'max:1024']]);
 
         $content = file_get_contents($request->file('csv')->getRealPath());
@@ -147,27 +159,20 @@ class AthleteController extends Controller
 
     private function rules(): array
     {
-        return [
-            'last_name' => ['required', 'string', 'max:50'],
-            'first_name' => ['required', 'string', 'max:50'],
-            'last_kana' => ['required', 'string', 'max:50', 'regex:/^[ァ-ヶー　 ]+$/u'],
-            'first_kana' => ['required', 'string', 'max:50', 'regex:/^[ァ-ヶー　 ]+$/u'],
-            'gender' => ['required', Rule::in(array_keys(Athlete::GENDERS))],
-            'birthdate' => ['required', 'date', 'before:today', 'after:1900-01-01'],
-            'category' => ['nullable', 'string', 'max:30'],
-            'jaaf_id' => ['nullable', 'string', 'max:30'],
-        ];
+        return AthleteRules::rules();
     }
 
     private function validated(array $input): array
     {
-        foreach (['last_kana', 'first_kana'] as $k) {
-            if (isset($input[$k])) {
-                $input[$k] = mb_convert_kana(trim($input[$k]), 'KVC');
-            }
-        }
+        return Validator::make(AthleteRules::normalize($input), $this->rules())->validate();
+    }
 
-        return Validator::make($input, $this->rules())->validate();
+    /**
+     * 個人の申込者は本人1人だけなので、選手の追加はできない。
+     */
+    private function denyIndividual(Request $request): void
+    {
+        abort_if($request->user()->isIndividual(), 404);
     }
 
     private function authorizeOwner(Request $request, Athlete $athlete): void

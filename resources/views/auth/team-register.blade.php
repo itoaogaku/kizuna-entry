@@ -1,19 +1,19 @@
 @extends('layouts.app')
-@section('title', 'チーム登録')
+@section('title', '団体の新規登録')
 
 @section('content')
-    <h1>チーム登録</h1>
+    <h1>団体の新規登録</h1>
     <div class="card">
-        <p class="muted">チームの代表者（エントリーと支払いを行う方）の情報を登録してください。入金完了メールはこのメールアドレスに届きます。</p>
-        <form method="POST" action="{{ route('register') }}">
+        <p class="muted">次回からは、ここで登録する<strong>団体名とパスワード</strong>で申込データを開きます。入金完了メールは代表者のメールアドレスに届きます。</p>
+        <form method="POST" action="{{ route('team.register') }}">
             @csrf
             <div class="row">
                 <div class="field">
-                    <label for="team_name">所属（チーム名）</label>
-                    <input id="team_name" type="text" name="team_name" value="{{ old('team_name') }}" required>
+                    <label for="team_name">団体名 <span class="hint">（ログインに使います）</span></label>
+                    <input id="team_name" type="text" name="team_name" value="{{ old('team_name') }}" placeholder="例：絆陸上クラブ" required>
                 </div>
                 <div class="field">
-                    <label for="team_kana">所属のフリガナ <span class="hint">（任意）</span></label>
+                    <label for="team_kana">団体名のフリガナ <span class="hint">（任意）</span></label>
                     <input id="team_kana" type="text" name="team_kana" value="{{ old('team_kana') }}">
                 </div>
             </div>
@@ -28,7 +28,7 @@
                 </div>
             </div>
             <div class="field">
-                <label for="email">メールアドレス</label>
+                <label for="email">代表者のメールアドレス <span class="hint">（入金完了メール・パスワード再設定に使います）</span></label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
             </div>
             <div class="row">
@@ -41,11 +41,9 @@
                     <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password">
                 </div>
             </div>
-            <div class="field">
-                <label class="inline"><input type="checkbox" name="agree" value="1" @checked(old('agree'))> 個人情報の取り扱いに同意します</label>
-                <p class="hint">登録された選手情報は、大会の運営（番組編成・記録の発表など）にのみ使用します。</p>
-            </div>
-            <button class="btn" type="submit">登録する</button>
+            @include('partials.agree')
+            <button class="btn" type="submit">団体を登録する</button>
         </form>
     </div>
+    <p><a href="{{ route('team.login') }}">← 登録済みの団体はこちら</a></p>
 @endsection

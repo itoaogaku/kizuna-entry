@@ -198,4 +198,17 @@ class EntryFlowTest extends TestCase
             ->get(route('entries.show', Entry::sole()))
             ->assertNotFound();
     }
+
+    public function test_individual_can_enter_themselves(): void
+    {
+        $solo = User::factory()->individual()->create();
+        $me = Athlete::factory()->for($solo)->create();
+
+        $this->actingAs($solo)->post(route('entries.review', $this->meet), ['items' => [
+            $me->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]],
+        ]])->assertRedirect(route('entries.confirm', $this->meet));
+        $this->actingAs($solo)->post(route('entries.store', $this->meet));
+
+        $this->assertSame($solo->id, Entry::sole()->user_id);
+    }
 }

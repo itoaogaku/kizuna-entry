@@ -11,6 +11,7 @@ class TeamController extends Controller
     public function index(): View
     {
         $teams = User::withCount(['athletes' => fn ($q) => $q->where('is_active', true)])
+            ->orderBy('type')
             ->orderBy('team_kana')
             ->orderBy('team_name')
             ->get();

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@hasSection('title')@yield('title') | @endif{{ config('app.name') }}</title>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=2">
 </head>
 <body>
 <header class="site">
@@ -12,7 +12,8 @@
         <a class="brand" href="{{ route('home') }}">{{ config('app.name') }}</a>
         <nav>
             @auth
-                <a href="{{ route('athletes.index') }}">選手登録</a>
+                <span class="muted">{{ auth()->user()->displayName() }}（{{ auth()->user()->typeLabel() }}）</span>
+                <a href="{{ route('athletes.index') }}">{{ auth()->user()->isTeam() ? '選手登録' : '登録情報' }}</a>
                 <a href="{{ route('entries.index') }}">エントリー履歴</a>
                 @if (auth()->user()->is_admin)
                     <a href="{{ route('admin.meets.index') }}">管理画面</a>
@@ -22,8 +23,8 @@
                     <button class="btn secondary small" type="submit">ログアウト</button>
                 </form>
             @else
-                <a href="{{ route('login') }}">ログイン</a>
-                <a class="btn small" href="{{ route('register') }}">チーム登録</a>
+                <a href="{{ route('team.login') }}">団体申し込み</a>
+                <a href="{{ route('individual.login') }}">個人申し込み</a>
             @endauth
         </nav>
     </div>

@@ -1,10 +1,11 @@
 @extends('layouts.app')
-@section('title', 'ログイン')
+@section('title', '個人申し込み')
 
 @section('content')
-    <h1>ログイン</h1>
+    <h1>個人申し込み</h1>
     <div class="card">
-        <form method="POST" action="{{ route('login') }}">
+        <p class="muted">登録済みの方は、メールアドレスとパスワードでログインしてください。</p>
+        <form method="POST" action="{{ route('individual.login') }}">
             @csrf
             <div class="field">
                 <label for="email">メールアドレス</label>
@@ -23,5 +24,9 @@
             </div>
         </form>
     </div>
-    <p>はじめての方は <a href="{{ route('register') }}">チーム登録</a> へ。</p>
+    <div class="card">
+        <p><strong>はじめての方</strong>は、選手本人の情報を登録してください。</p>
+        <a class="btn secondary" href="{{ route('individual.register') }}">個人の新規登録</a>
+    </div>
+    <p><a href="{{ route('home') }}">← 申し込み方法の選択に戻る</a></p>
 @endsection

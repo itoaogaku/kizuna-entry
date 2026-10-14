@@ -12,22 +12,6 @@ class AthleteTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_team_can_register_and_is_logged_in(): void
-    {
-        $this->post('/register', [
-            'team_name' => '絆AC',
-            'name' => '代表 花子',
-            'phone' => '090-1234-5678',
-            'email' => 'team@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'agree' => '1',
-        ])->assertRedirect(route('athletes.index'));
-
-        $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', ['email' => 'team@example.com', 'team_name' => '絆AC', 'is_admin' => false]);
-    }
-
     public function test_athlete_can_be_registered_with_hiragana_converted_to_katakana(): void
     {
         $user = User::factory()->create();
