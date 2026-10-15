@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Entry;
 use App\Models\EntryItem;
 use App\Models\Meet;
-use App\Support\RaceTime;
+use App\Support\EntryOrder;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -15,12 +15,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 /**
  * 運営用のエントリー一覧（Excel）。
  * 列はエントリーシートの「申込み」欄と同じ並びにし、団体名と受付情報を後ろに足している。
- * 1枚目に全種目、2枚目以降に種目ごとのシート（申請タイム順）を作る。
+ * 1枚目に全種目、2枚目以降に種目ごとのシートを作る。並びは目標タイム順（同タイムは自己ベスト順）。
  */
 class EntryExport
 {
     private const HEADER = [
-        'No', '団体名', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '申込み種目', '申請タイム', '自己ベスト',
+        'No', '団体名', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '申込み種目', '目標タイム', '自己ベスト',
         '種別', 'PRしたい一言', '料金', '受付番号', '申込区分', '状態', '入金日時', '申込者', '電話番号', 'メール',
     ];
 
@@ -43,18 +43,12 @@ class EntryExport
      */
     private function items(Meet $meet, string $status): Collection
     {
-        return EntryItem::query()
+        return EntryOrder::sort(EntryItem::query()
             ->with('entry.user', 'athlete', 'event')
             ->whereHas('entry', fn ($q) => $q->where('meet_id', $meet->id)
-                ->when($status !== 'all', fn ($q) => $q->where('status', $status)))
-            ->get()
-            ->sortBy([
-                fn ($a, $b) => $a->event->sort_order <=> $b->event->sort_order,
-                fn ($a, $b) => $a->event_id <=> $b->event_id,
-                // 申請タイムの速い順（読めないタイムは最後）
-                fn ($a, $b) => (RaceTime::toSeconds($a->declared_record) ?? INF) <=> (RaceTime::toSeconds($b->declared_record) ?? INF),
-            ])
-            ->values();
+                ->when($status === 'active', fn ($q) => $q->whereIn('status', [Entry::STATUS_PAID, Entry::STATUS_PENDING]))
+                ->when(! in_array($status, ['all', 'active'], true), fn ($q) => $q->where('status', $status)))
+            ->get());
     }
 
     /**

@@ -7,7 +7,7 @@
 
     <div class="table-wrap">
         <table>
-            <thead><tr><th>氏名</th><th>性別</th><th>申込み種目</th><th>申請タイム</th><th>自己ベスト</th><th>PRしたい一言</th><th class="num">料金</th></tr></thead>
+            <thead><tr><th>氏名</th><th>性別</th><th>申込み種目</th><th>目標タイム</th><th>PRしたい一言</th><th class="num">料金</th></tr></thead>
             <tbody>
             @foreach ($selections as $s)
                 <tr>
@@ -15,13 +15,12 @@
                     <td>{{ $s['athlete']->genderLabel() }}</td>
                     <td>{{ $s['event']->name }}</td>
                     <td>{{ $s['record'] }}</td>
-                    <td>{{ $s['best'] ?? '―' }}</td>
                     <td style="white-space:normal">{{ $s['pr'] ?? '' }}</td>
                     <td class="num">{{ number_format($s['event']->fee) }}円</td>
                 </tr>
             @endforeach
             <tr>
-                <th colspan="6">合計（{{ $selections->count() }}件）</th>
+                <th colspan="5">合計（{{ $selections->count() }}件）</th>
                 <th class="num">{{ number_format($total) }}円</th>
             </tr>
             </tbody>

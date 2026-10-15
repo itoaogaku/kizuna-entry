@@ -69,7 +69,7 @@ class EntryFlowTest extends TestCase
         $notSelected = Athlete::factory()->for($this->team)->create();
 
         $this->actingAs($this->team)->post(route('entries.review', $this->meet), ['items' => [
-            $man->id => ['selected' => '1', 'pr' => 'チーム内No.1の練習量', 'events' => [['event_id' => $this->men5000->id, 'record' => '１４’３０', 'best' => "14'45"]]],
+            $man->id => ['selected' => '1', 'pr' => 'チーム内No.1の練習量', 'events' => [['event_id' => $this->men5000->id, 'record' => '１４’３０']]],
             $woman->id => ['selected' => '1', 'events' => [['event_id' => $this->women3000->id, 'record' => "10'05"]]],
             $notSelected->id => ['events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]],
         ]])->assertRedirect(route('entries.confirm', $this->meet));
@@ -86,9 +86,8 @@ class EntryFlowTest extends TestCase
         $this->assertCount(2, $entry->items);
         $manItem = $entry->items->firstWhere('athlete_id', $man->id);
         $this->assertSame("14'30", $manItem->declared_record);
-        $this->assertSame("14'45", $manItem->personal_best);
+        $this->assertNull($manItem->personal_best); // 自己ベストは申込では聞かない
         $this->assertSame('チーム内No.1の練習量', $manItem->pr_comment);
-        $this->assertNull($entry->items->firstWhere('athlete_id', $woman->id)->personal_best);
         $response->assertRedirect('https://checkout.stripe.test/'.$entry->stripe_session_id);
         Mail::assertNothingSent();
     }
@@ -189,7 +188,7 @@ class EntryFlowTest extends TestCase
     {
         $this->men5000->update(['capacity' => 1]);
         $man = Athlete::factory()->for($this->team)->create();
-        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00", 'best' => "14'50"]]]]);
+        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "14'50"]]]]);
         $entry = Entry::sole();
 
         $this->actingAs($this->team)->get(route('entries.checkout-cancelled', $entry))
@@ -225,5 +224,19 @@ class EntryFlowTest extends TestCase
         $this->actingAs($solo)->post(route('entries.store', $this->meet));
 
         $this->assertSame($solo->id, Entry::sole()->user_id);
+    }
+
+    public function test_previous_target_time_is_offered_for_the_same_event(): void
+    {
+        $man = Athlete::factory()->for($this->team)->create();
+        $past = Meet::factory()->create(['name' => '前回']);
+        $pastEvent = Event::factory()->for($past)->create(['name' => '一般男子5000m']);
+        $entry = $this->team->entries()->create(['meet_id' => $past->id, 'status' => Entry::STATUS_PAID, 'total_amount' => 2000]);
+        $entry->items()->create(['athlete_id' => $man->id, 'event_id' => $pastEvent->id, 'fee' => 2000, 'declared_record' => "14'55"]);
+
+        $this->actingAs($this->team)->get(route('entries.create', $this->meet))
+            ->assertOk()
+            ->assertSee(json_encode(['一般男子5000m' => "14'55"], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), false)
+            ->assertDontSee('自己ベスト');
     }
 }

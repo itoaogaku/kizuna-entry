@@ -1,8 +1,8 @@
 @extends('layouts.app')
-@section('title', $meet->name.' エントリー一覧')
+@section('title', $meet->name.' 申込・入金状況')
 
 @section('content')
-    <h1>{{ $meet->name }} エントリー一覧</h1>
+    <h1>{{ $meet->name }} 申込・入金状況</h1>
     @include('admin.nav')
     <form method="GET" class="actions" style="margin-bottom:16px">
         <select name="status" onchange="this.form.submit()" style="width:auto">

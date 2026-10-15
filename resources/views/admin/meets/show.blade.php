@@ -13,7 +13,8 @@
         </dl>
         <div class="actions">
             <a class="btn secondary" href="{{ route('admin.meets.edit', $meet) }}">大会情報を編集</a>
-            <a class="btn" href="{{ route('admin.entries.index', $meet) }}">エントリー一覧</a>
+            <a class="btn" href="{{ route('admin.roster.index', $meet) }}">申込一覧（目標タイム順）</a>
+            <a class="btn secondary" href="{{ route('admin.entries.index', $meet) }}">申込・入金状況</a>
         </div>
     </div>
 

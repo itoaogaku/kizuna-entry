@@ -28,7 +28,7 @@
 
     <div class="table-wrap">
         <table>
-            <thead><tr><th>氏名</th><th>性別</th><th>申込み種目</th><th>申請タイム</th><th>自己ベスト</th><th>PRしたい一言</th><th class="num">料金</th></tr></thead>
+            <thead><tr><th>氏名</th><th>性別</th><th>申込み種目</th><th>目標タイム</th><th>PRしたい一言</th><th class="num">料金</th></tr></thead>
             <tbody>
             @foreach ($entry->items as $item)
                 <tr>
@@ -36,7 +36,6 @@
                     <td>{{ $item->athlete->genderLabel() }}</td>
                     <td>{{ $item->event->name }}</td>
                     <td>{{ $item->declared_record ?? '―' }}</td>
-                    <td>{{ $item->personal_best ?? '―' }}</td>
                     <td style="white-space:normal">{{ $item->pr_comment }}</td>
                     <td class="num">{{ number_format($item->fee) }}円</td>
                 </tr>

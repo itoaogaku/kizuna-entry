@@ -85,7 +85,7 @@ th.sticky-col { background: #f0f2f5; }
 .badge.pending { background: var(--warn-bg); }
 .badge.cancelled { background: #eee; color: var(--muted); }
 .total-bar {
-  position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--border);
+  position: sticky; bottom: 0; z-index: 2; background: var(--surface); border-top: 1px solid var(--border);
   padding: 12px 16px; margin: 16px -16px 0; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
 }
 .total-bar strong { font-size: 1.2rem; }
@@ -105,5 +105,13 @@ dl.kv dd { margin: 0; }
 .choice .btn { align-self: flex-start; }
 td.slot { min-width: 240px; }
 td.slot .times { display: flex; gap: 6px; margin-top: 6px; }
-td.slot .times input { min-width: 0; width: 50%; }
+td.slot .times input { min-width: 0; width: 100%; }
 td input.pr { min-width: 240px; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
+.filters label { font-weight: 600; font-size: .85rem; }
+.filters select { display: block; width: auto; min-width: 180px; margin-top: 4px; }
+tr.tie td { background: var(--warn-bg); }
+.tie-note { background: var(--warn-bg); padding: 0 4px; }
+.best-form { display: flex; gap: 4px; align-items: center; }
+.best-form input[type=text] { min-width: 0; width: 90px; padding: 4px 6px; }

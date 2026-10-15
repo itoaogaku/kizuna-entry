@@ -23,8 +23,8 @@ class EntryService
     /**
      * フォームの入力（選手ごとの種目選択）を検証し、明細の一覧に変換する。
      *
-     * @param  array<int|string, array{selected?: mixed, pr?: mixed, events?: array<int, array{event_id?: mixed, record?: mixed, best?: mixed}>}>  $input
-     * @return Collection<int, array{athlete: Athlete, event: Event, record: string, best: ?string, pr: ?string}>
+     * @param  array<int|string, array{selected?: mixed, pr?: mixed, events?: array<int, array{event_id?: mixed, record?: mixed}>}>  $input
+     * @return Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string}>
      */
     public function buildSelections(User $user, Meet $meet, array $input): Collection
     {
@@ -86,19 +86,13 @@ class EntryService
                     continue;
                 }
                 $record = RaceTime::normalize($e['record'] ?? null);
-                $best = RaceTime::normalize($e['best'] ?? null);
                 if ($record === null) {
-                    $errors[$key] = $athlete->fullName().'：'.$event->name.'の申請タイムを入力してください。';
+                    $errors[$key] = $athlete->fullName().'：'.$event->name.'の目標タイムを入力してください。';
 
                     continue;
                 }
                 if (! RaceTime::isValid($record)) {
-                    $errors[$key] = $athlete->fullName().'：申請タイム「'.$record.'」の形が正しくありません（例：14\'30）。';
-
-                    continue;
-                }
-                if ($best !== null && ! RaceTime::isValid($best)) {
-                    $errors[$key] = $athlete->fullName().'：自己ベスト「'.$best.'」の形が正しくありません（例：14\'45）。';
+                    $errors[$key] = $athlete->fullName().'：目標タイム「'.$record.'」の形が正しくありません（例：14\'30）。';
 
                     continue;
                 }
@@ -112,7 +106,6 @@ class EntryService
                     'athlete' => $athlete,
                     'event' => $event,
                     'record' => $record,
-                    'best' => $best,
                     'pr' => $pr === '' ? null : $pr,
                 ]);
             }
@@ -131,7 +124,7 @@ class EntryService
     /**
      * 決済待ちのエントリーを作成する。定員はここで最終確認する。
      *
-     * @param  Collection<int, array{athlete: Athlete, event: Event, record: string, best: ?string, pr: ?string}>  $selections
+     * @param  Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string}>  $selections
      */
     public function createPendingEntry(User $user, Meet $meet, Collection $selections): Entry
     {
@@ -171,7 +164,6 @@ class EntryService
                     'athlete_id' => $s['athlete']->id,
                     'event_id' => $s['event']->id,
                     'declared_record' => $s['record'],
-                    'personal_best' => $s['best'] ?? null,
                     'pr_comment' => $s['pr'] ?? null,
                     'fee' => $events[$s['event']->id]->fee,
                 ]);
@@ -244,6 +236,28 @@ class EntryService
         Entry::whereKey($entry->id)
             ->where('status', Entry::STATUS_PENDING)
             ->update(['status' => Entry::STATUS_CANCELLED]);
+    }
+
+    /**
+     * 選手ごとの、過去の大会で入れた目標タイム（種目名ごとに最新のもの）。
+     * エントリー画面で種目を選んだときに自動で入れ、入力の手間を減らす。
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function previousTargets(User $user): array
+    {
+        $result = [];
+        EntryItem::query()
+            ->with('event')
+            ->whereNotNull('declared_record')
+            ->whereHas('entry', fn ($q) => $q->where('user_id', $user->id)->where('status', Entry::STATUS_PAID))
+            ->orderBy('id')
+            ->get()
+            ->each(function (EntryItem $item) use (&$result) {
+                $result[$item->athlete_id][$item->event->name] = $item->declared_record;
+            });
+
+        return $result;
     }
 
     /**

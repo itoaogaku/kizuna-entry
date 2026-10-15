@@ -55,6 +55,7 @@ class EntryController extends Controller
                 ->groupBy(0)
                 ->map(fn ($pairs) => $pairs->pluck(1)->map(fn ($id) => (int) $id)),
             'old' => session("entry_draft.{$meet->id}", []),
+            'previousTargets' => $this->entries->previousTargets($request->user()),
         ]);
     }
 
@@ -162,7 +163,6 @@ class EntryController extends Controller
                 $draft[$item->athlete_id]['events'][] = [
                     'event_id' => $item->event_id,
                     'record' => $item->declared_record,
-                    'best' => $item->personal_best,
                 ];
             }
             $request->session()->put("entry_draft.{$entry->meet_id}", $draft);

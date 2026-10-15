@@ -69,5 +69,25 @@ class DatabaseSeeder extends Seeder
                 'name' => $name, 'gender' => $gender, 'fee' => $fee, 'capacity' => $capacity, 'sort_order' => ($i + 1) * 10,
             ]);
         }
+
+        // 管理画面の確認用：入金済みの申込（2団体＋個人）
+        $five = $meet->events()->where('name', '5000m')->first();
+        $other = User::factory()->create(['name' => '代表 次郎', 'team_name' => '〇〇高校', 'email' => 'koko@example.com']);
+        $demo = [
+            [$team, $team->athletes()->where('last_name', '青山')->first(), "14'30", "14'41", 'チーム内No.1の練習量'],
+            [$team, $team->athletes()->where('last_name', '伊藤')->first(), "14'50", null, null],
+            [$solo, $solo->athletes()->first(), "14'30", "14'28", null],
+            [$other, Athlete::factory()->for($other)->create(['last_name' => '山田', 'first_name' => '健', 'kana' => 'ヤマダ ケン', 'category' => '高校生', 'grade' => 3, 'association' => '埼玉']), "14'30", null, '初の14分台を狙います'],
+            [$other, Athlete::factory()->for($other)->create(['last_name' => '小林', 'first_name' => '蓮', 'kana' => 'コバヤシ レン', 'category' => '高校生', 'grade' => 2, 'association' => '埼玉']), "15'05", null, null],
+        ];
+        foreach ($demo as [$owner, $athlete, $target, $best, $pr]) {
+            $entry = $owner->entries()->create([
+                'meet_id' => $meet->id, 'status' => 'paid', 'total_amount' => $five->fee, 'paid_at' => now(),
+            ]);
+            $entry->items()->create([
+                'athlete_id' => $athlete->id, 'event_id' => $five->id, 'fee' => $five->fee,
+                'declared_record' => $target, 'personal_best' => $best, 'pr_comment' => $pr,
+            ]);
+        }
     }
 }

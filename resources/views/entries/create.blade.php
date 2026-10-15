@@ -5,7 +5,8 @@
     <h1>{{ $meet->name }} エントリー</h1>
     <p class="muted">
         開催日 {{ $meet->held_on->isoFormat('YYYY年M月D日（ddd）') }}・締切 {{ $meet->entry_closes_at->format('Y/m/d H:i') }}・1人{{ $meet->max_events_per_athlete }}種目まで<br>
-        出場する選手にチェックを入れ、申込み種目・申請タイム（例 14'30）を入力してください。自己ベストとPRしたい一言は任意です。
+        出場する選手にチェックを入れ、申込み種目と目標タイム（例 14'30）を入力してください。PRしたい一言は任意です。<br>
+        前回の大会で同じ種目に出た選手は、種目を選ぶと前回の目標タイムが自動で入ります。
     </p>
 
     @if ($athletes->isEmpty())
@@ -24,7 +25,7 @@
                         <th>性別</th>
                         <th>種別・学年</th>
                         @for ($i = 0; $i < $meet->max_events_per_athlete; $i++)
-                            <th>申込み種目{{ $meet->max_events_per_athlete > 1 ? $i + 1 : '' }}<br><span class="muted">申請タイム／自己ベスト</span></th>
+                            <th>申込み種目{{ $meet->max_events_per_athlete > 1 ? $i + 1 : '' }}<br><span class="muted">目標タイム</span></th>
                         @endfor
                         <th>PRしたい一言 <span class="muted">（任意・実況で使用）</span></th>
                     </tr>
@@ -36,7 +37,7 @@
                             $checked = ! empty($row['selected']);
                             $already = $enteredByAthlete->get($athlete->id, collect());
                         @endphp
-                        <tr data-row class="{{ $checked ? 'selected' : '' }}">
+                        <tr data-row class="{{ $checked ? 'selected' : '' }}" data-previous='@json($previousTargets[$athlete->id] ?? (object) [])'>
                             <td class="sticky-col">
                                 <label class="athlete-pick">
                                     <input type="checkbox" name="items[{{ $athlete->id }}][selected]" value="1" data-select @checked($checked)>
@@ -59,7 +60,7 @@
                                                 $left = $remaining[$event->id];
                                                 $isEntered = $already->contains($event->id);
                                             @endphp
-                                            <option value="{{ $event->id }}" data-fee="{{ $event->fee }}"
+                                            <option value="{{ $event->id }}" data-fee="{{ $event->fee }}" data-name="{{ $event->name }}"
                                                     @selected((string) ($slot['event_id'] ?? '') === (string) $event->id)
                                                     @disabled($isEntered || $left === 0)>
                                                 {{ $event->name }}（{{ number_format($event->fee) }}円{{ $left === 0 ? '・定員到達' : ($left !== null && $left <= 10 ? '・残'.$left : '') }}{{ $isEntered ? '・申込済' : '' }}）
@@ -68,9 +69,7 @@
                                     </select>
                                     <div class="times">
                                         <input type="text" name="items[{{ $athlete->id }}][events][{{ $i }}][record]" value="{{ $slot['record'] ?? '' }}"
-                                               placeholder="例 14'30" aria-label="申請タイム" inputmode="text">
-                                        <input type="text" name="items[{{ $athlete->id }}][events][{{ $i }}][best]" value="{{ $slot['best'] ?? '' }}"
-                                               placeholder="任意" aria-label="自己ベスト" inputmode="text">
+                                               placeholder="例 14'30" aria-label="目標タイム" data-record>
                                     </div>
                                 </td>
                             @endfor
@@ -114,9 +113,14 @@
         document.getElementById('total').textContent = total.toLocaleString('ja-JP');
     };
     form.addEventListener('change', e => {
-        // 種目を選んだら、その選手に自動でチェックを入れる
+        // 種目を選んだら、その選手に自動でチェックを入れ、前回の目標タイムがあれば入れる
         if (e.target.matches('[data-event]') && e.target.value) {
-            e.target.closest('tr').querySelector('[data-select]').checked = true;
+            const tr = e.target.closest('tr');
+            tr.querySelector('[data-select]').checked = true;
+            const record = e.target.closest('td').querySelector('[data-record]');
+            const name = e.target.selectedOptions[0].dataset.name;
+            const previous = JSON.parse(tr.dataset.previous || '{}');
+            if (record && !record.value && previous[name]) record.value = previous[name];
         }
         update();
     });
