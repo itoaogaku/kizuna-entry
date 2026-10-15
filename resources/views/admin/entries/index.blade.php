@@ -16,7 +16,7 @@
 
     <div class="table-wrap">
         <table>
-            <thead><tr><th>受付番号</th><th>所属</th><th>代表者</th><th>内容</th><th class="num">金額</th><th>状態</th><th>入金日時</th><th>Stripe</th></tr></thead>
+            <thead><tr><th>受付番号</th><th>所属</th><th>代表者</th><th>内容</th><th class="num">金額</th><th>状態</th><th>入金日時</th><th>支払い方法</th></tr></thead>
             <tbody>
             @forelse ($entries as $entry)
                 <tr>
@@ -32,8 +32,11 @@
                     <td><span class="badge {{ $entry->status }}">{{ $entry->statusLabel() }}</span></td>
                     <td>{{ $entry->paid_at?->format('Y/m/d H:i') }}</td>
                     <td>
-                        @if ($entry->stripe_payment_intent_id)
-                            <a href="https://dashboard.stripe.com/payments/{{ $entry->stripe_payment_intent_id }}" target="_blank" rel="noopener">決済を見る</a>
+                        {{ $entry->methodLabel() }}<br>
+                        @if ($entry->payment_id && ! $entry->isKonbini())
+                            <a href="https://dashboard.stripe.com/payments/{{ $entry->payment_id }}" target="_blank" rel="noopener">Stripeで見る</a>
+                        @elseif ($entry->payment_id)
+                            <span class="muted">KOMOJU {{ $entry->payment_id }}</span>
                         @endif
                     </td>
                 </tr>

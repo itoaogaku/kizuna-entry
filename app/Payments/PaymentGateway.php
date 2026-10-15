@@ -14,7 +14,7 @@ interface PaymentGateway
     public function retrieveCheckout(string $sessionId): CheckoutSession;
 
     /**
-     * 未完了の決済ページを無効にする。すでに支払い済みなどで無効にできなければ false。
+     * 未完了の決済ページを無効にする。すでに支払い済み・コンビニの番号発行後などで無効にできなければ false。
      */
     public function expireCheckout(string $sessionId): bool;
 }

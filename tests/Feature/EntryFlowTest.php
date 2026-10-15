@@ -9,7 +9,7 @@ use App\Models\Event;
 use App\Models\Meet;
 use App\Models\User;
 use App\Payments\FakePaymentGateway;
-use App\Payments\PaymentGateway;
+use App\Payments\PaymentGateways;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
@@ -20,6 +20,8 @@ class EntryFlowTest extends TestCase
     use RefreshDatabase;
 
     private FakePaymentGateway $payments;
+
+    private FakePaymentGateway $konbini;
 
     private User $team;
 
@@ -33,8 +35,13 @@ class EntryFlowTest extends TestCase
     {
         parent::setUp();
         Mail::fake();
-        $this->payments = new FakePaymentGateway;
-        $this->app->instance(PaymentGateway::class, $this->payments);
+        config(['services.stripe.secret' => 'sk_test', 'services.komoju.secret' => 'komoju_test']);
+        $this->payments = new FakePaymentGateway('cs_test_');
+        $this->konbini = new FakePaymentGateway('komoju_');
+        $this->app->instance(PaymentGateways::class, new PaymentGateways([
+            Entry::METHOD_CARD => fn () => $this->payments,
+            Entry::METHOD_KONBINI => fn () => $this->konbini,
+        ]));
 
         $this->team = User::factory()->create();
         $this->meet = Meet::factory()->create();
@@ -88,7 +95,7 @@ class EntryFlowTest extends TestCase
         $this->assertSame("14'30", $manItem->declared_record);
         $this->assertNull($manItem->personal_best); // 自己ベストは申込では聞かない
         $this->assertSame('チーム内No.1の練習量', $manItem->pr_comment);
-        $response->assertRedirect('https://checkout.stripe.test/'.$entry->stripe_session_id);
+        $response->assertRedirect('https://checkout.example.test/'.$entry->payment_session_id);
         Mail::assertNothingSent();
     }
 
@@ -171,15 +178,15 @@ class EntryFlowTest extends TestCase
         $man = Athlete::factory()->for($this->team)->create();
         $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]]);
         $entry = Entry::sole();
-        $this->payments->markPaid($entry->stripe_session_id, 'pi_abc');
+        $this->payments->markPaid($entry->payment_session_id, 'pi_abc');
 
-        $url = route('entries.complete', ['entry' => $entry, 'session_id' => $entry->stripe_session_id]);
+        $url = route('entries.complete', ['entry' => $entry, 'session_id' => $entry->payment_session_id]);
         $this->actingAs($this->team)->get($url)->assertOk()->assertSee('エントリーが完了しました');
         $this->actingAs($this->team)->get($url)->assertOk();
 
         $entry->refresh();
         $this->assertTrue($entry->isPaid());
-        $this->assertSame('pi_abc', $entry->stripe_payment_intent_id);
+        $this->assertSame('pi_abc', $entry->payment_id);
         Mail::assertSent(EntryPaidMail::class, 1);
         Mail::assertSent(EntryPaidMail::class, fn ($mail) => $mail->hasTo($this->team->email));
     }
@@ -195,7 +202,7 @@ class EntryFlowTest extends TestCase
             ->assertRedirect(route('entries.create', $this->meet));
 
         $this->assertSame(Entry::STATUS_CANCELLED, $entry->fresh()->status);
-        $this->assertTrue($this->payments->expired[$entry->stripe_session_id]);
+        $this->assertTrue($this->payments->expired[$entry->payment_session_id]);
         $this->actingAs($this->team)->get(route('entries.create', $this->meet))->assertSee('value="14&#039;50"', false);
 
         // 枠が空いたので、もう一度申し込める

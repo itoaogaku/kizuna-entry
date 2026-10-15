@@ -8,12 +8,14 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\TeamAuthController;
 use App\Http\Controllers\EntryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\KomojuWebhookController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+Route::post('/komoju/webhook', KomojuWebhookController::class)->name('komoju.webhook');
 
 // ログインが必要な画面からは、最初の選択画面（団体／個人）に戻す
 Route::redirect('/login', '/')->name('login');
@@ -41,6 +43,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
     // 選手の初期登録
+    Route::get('/athletes/advance', [AthleteController::class, 'advanceForm'])->name('athletes.advance');
+    Route::post('/athletes/advance', [AthleteController::class, 'advance']);
     Route::get('/athletes/import', [AthleteController::class, 'importForm'])->name('athletes.import');
     Route::post('/athletes/import', [AthleteController::class, 'import']);
     Route::get('/athletes/template.csv', [AthleteController::class, 'template'])->name('athletes.template');

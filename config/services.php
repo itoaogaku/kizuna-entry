@@ -40,6 +40,12 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    // コンビニ払い（KOMOJU 管理画面 → 設定 → API鍵 / Webhook）
+    'komoju' => [
+        'secret' => env('KOMOJU_SECRET'),
+        'webhook_secret' => env('KOMOJU_WEBHOOK_SECRET'),
+    ],
+
     // 運営への通知先（入金完了メールのBCCなど）
     'kizuna' => [
         'admin_email' => env('KIZUNA_ADMIN_EMAIL'),

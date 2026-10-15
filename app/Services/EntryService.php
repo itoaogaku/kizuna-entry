@@ -9,7 +9,8 @@ use App\Models\EntryItem;
 use App\Models\Event;
 use App\Models\Meet;
 use App\Models\User;
-use App\Payments\PaymentGateway;
+use App\Payments\CheckoutSession;
+use App\Payments\PaymentGateways;
 use App\Support\RaceTime;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 class EntryService
 {
-    public function __construct(private PaymentGateway $payments) {}
+    public function __construct(private PaymentGateways $payments) {}
 
     /**
      * フォームの入力（選手ごとの種目選択）を検証し、明細の一覧に変換する。
@@ -126,9 +127,9 @@ class EntryService
      *
      * @param  Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string}>  $selections
      */
-    public function createPendingEntry(User $user, Meet $meet, Collection $selections): Entry
+    public function createPendingEntry(User $user, Meet $meet, Collection $selections, string $method = Entry::METHOD_CARD): Entry
     {
-        return DB::transaction(function () use ($user, $meet, $selections) {
+        return DB::transaction(function () use ($user, $meet, $selections, $method) {
             $events = Event::whereIn('id', $selections->pluck('event.id')->unique())
                 ->lockForUpdate()
                 ->get()
@@ -156,6 +157,7 @@ class EntryService
             $entry = $user->entries()->create([
                 'meet_id' => $meet->id,
                 'status' => Entry::STATUS_PENDING,
+                'payment_method' => $method,
                 'total_amount' => $selections->sum(fn ($s) => $events[$s['event']->id]->fee),
             ]);
 
@@ -176,16 +178,16 @@ class EntryService
     /**
      * 入金済みにする。すでに処理済みなら何もしない（Webhookは複数回届くことがある）。
      */
-    public function markPaid(Entry $entry, ?string $paymentIntentId): void
+    public function markPaid(Entry $entry, ?string $paymentId): void
     {
-        $changed = DB::transaction(function () use ($entry, $paymentIntentId) {
+        $changed = DB::transaction(function () use ($entry, $paymentId) {
             $fresh = Entry::whereKey($entry->id)->lockForUpdate()->first();
             if ($fresh->isPaid()) {
                 return false;
             }
             $fresh->update([
                 'status' => Entry::STATUS_PAID,
-                'stripe_payment_intent_id' => $paymentIntentId,
+                'payment_id' => $paymentId,
                 'paid_at' => now(),
             ]);
 
@@ -203,6 +205,29 @@ class EntryService
     }
 
     /**
+     * 決済サービスに問い合わせて、エントリーの状態を合わせる（戻り画面・Webhook・支払い再開で使う）。
+     * 支払い済み → 入金済みにしてメール、コンビニの番号発行 → 払込票URLを保存、期限切れ・キャンセル → 取消。
+     */
+    public function syncPayment(Entry $entry): ?CheckoutSession
+    {
+        if ($entry->status !== Entry::STATUS_PENDING || ! $entry->payment_session_id) {
+            return null;
+        }
+        $session = $this->payments->forEntry($entry)->retrieveCheckout($entry->payment_session_id);
+
+        if ($session->isPaid()) {
+            $this->markPaid($entry, $session->paymentId);
+        } elseif ($session->isAwaiting()) {
+            $entry->update(['payment_id' => $session->paymentId, 'payment_instructions_url' => $session->instructionsUrl]);
+        } elseif ($session->isAbandoned()) {
+            $this->cancelByWebhook($entry);
+        }
+        $entry->refresh();
+
+        return $session;
+    }
+
+    /**
      * 決済待ちのエントリーを取り消し、確保していた枠を空ける。
      */
     public function cancelPending(Entry $entry): bool
@@ -210,14 +235,15 @@ class EntryService
         if ($entry->status !== Entry::STATUS_PENDING) {
             return false;
         }
-        if ($entry->stripe_session_id) {
-            $session = $this->payments->retrieveCheckout($entry->stripe_session_id);
+        if ($entry->payment_session_id) {
+            $gateway = $this->payments->forEntry($entry);
+            $session = $gateway->retrieveCheckout($entry->payment_session_id);
             if ($session->isPaid()) {
-                $this->markPaid($entry, $session->paymentIntentId);
+                $this->markPaid($entry, $session->paymentId);
 
                 return false;
             }
-            if (! $this->payments->expireCheckout($entry->stripe_session_id)) {
+            if (! $gateway->expireCheckout($entry->payment_session_id)) {
                 // コンビニ払いの番号発行後などは取り消さない
                 return false;
             }
@@ -229,7 +255,7 @@ class EntryService
     }
 
     /**
-     * Stripeの決済ページが期限切れ・失敗になったときの取消（Webhook用）。
+     * 決済ページが期限切れ・失敗になったときの取消（Webhook用）。
      */
     public function cancelByWebhook(Entry $entry): void
     {
@@ -258,6 +284,46 @@ class EntryService
             });
 
         return $result;
+    }
+
+    /**
+     * 「前回と同じ内容で申し込む」用に、前回の大会（入金済み）の内容をこの大会の入力欄の形にする。
+     * 種目は名前が同じものに置き換え、対象外の選手・この大会で申込済みの組み合わせは除く。
+     *
+     * @return array{0: ?Meet, 1: array<int, array<string, mixed>>} [前回の大会, 入力欄の内容]
+     */
+    public function previousEntryDraft(User $user, Meet $meet): array
+    {
+        $previous = Meet::query()
+            ->where('id', '!=', $meet->id)
+            ->whereHas('entries', fn ($q) => $q->where('user_id', $user->id)->where('status', Entry::STATUS_PAID))
+            ->orderByDesc('held_on')
+            ->first();
+        if (! $previous) {
+            return [null, []];
+        }
+
+        $events = $meet->events()->get()->keyBy('name');
+        $entered = $this->enteredPairs($meet);
+        $draft = [];
+        $items = EntryItem::query()
+            ->with('athlete', 'event')
+            ->whereHas('entry', fn ($q) => $q->where('user_id', $user->id)->where('meet_id', $previous->id)->where('status', Entry::STATUS_PAID))
+            ->orderBy('id')
+            ->get();
+        foreach ($items as $item) {
+            $event = $events->get($item->event->name);
+            if (! $event || ! $item->athlete->is_active || ! $event->allowsGender($item->athlete->gender)
+                || $entered->contains($item->athlete_id.'-'.$event->id)
+                || count($draft[$item->athlete_id]['events'] ?? []) >= $meet->max_events_per_athlete) {
+                continue;
+            }
+            $draft[$item->athlete_id]['selected'] = '1';
+            $draft[$item->athlete_id]['pr'] = $item->pr_comment;
+            $draft[$item->athlete_id]['events'][] = ['event_id' => $event->id, 'record' => $item->declared_record];
+        }
+
+        return [$previous, $draft];
     }
 
     /**

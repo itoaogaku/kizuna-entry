@@ -35,7 +35,7 @@ class StripeWebhookController extends Controller
             ? Entry::find($session->metadata->entry_id)
             : null;
 
-        if (! $entry || $entry->stripe_session_id !== $session->id) {
+        if (! $entry || $entry->payment_session_id !== $session->id) {
             Log::warning('Stripe webhook: entry not found', ['type' => $event->type, 'session' => $session->id ?? null]);
 
             return response('ignored');

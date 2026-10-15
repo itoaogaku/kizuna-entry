@@ -70,6 +70,8 @@ MAIL_FROM_ADDRESS="entry@example.com"
 
 STRIPE_SECRET=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+KOMOJU_SECRET=（KOMOJUの秘密鍵）
+KOMOJU_WEBHOOK_SECRET=（KOMOJUのWebhookに設定した秘密トークン）
 KIZUNA_ADMIN_EMAIL=（運営の受信用アドレス）
 ```
 
@@ -97,7 +99,7 @@ ln -s ~/kizuna-entry/public entry
 cd ~/kizuna-entry && /usr/bin/php8.3 artisan kizuna:make-admin 登録したメールアドレス
 ```
 
-## 6. Stripe の設定
+## 6. Stripe の設定（カード払い）
 
 1. Stripe ダッシュボードを **テストモード** にする。
 2. `開発者 → APIキー` のシークレットキー（`sk_test_…`）を `.env` の `STRIPE_SECRET` に入れる。
@@ -105,9 +107,27 @@ cd ~/kizuna-entry && /usr/bin/php8.3 artisan kizuna:make-admin 登録したメ�
    - URL：`https://entry.example.com/stripe/webhook`
    - イベント：`checkout.session.completed`、`checkout.session.async_payment_succeeded`、`checkout.session.async_payment_failed`、`checkout.session.expired`
    - 作成後に表示される署名シークレット（`whsec_…`）を `.env` の `STRIPE_WEBHOOK_SECRET` に入れる
-4. `設定 → カスタマーへのメール` で「支払い成功」をオンにすると、Stripe からも領収書メールが届きます。
-5. コンビニ払いを使う場合は `設定 → 決済手段` でコンビニ決済を有効にします（コードの変更は不要です）。
-6. `.env` を変えたら、SSH で `cd ~/kizuna-entry && /usr/bin/php8.3 artisan optimize` を実行して設定を読み込み直します。
+4. `設定 → 決済手段` で
+   - **カード** と **Link** をオンにする（Link をオンにすると、2回目以降はメールアドレスの確認だけでカード情報を入れずに支払える）
+   - **コンビニ決済はオフ** にする（コンビニ払いは KOMOJU で受けるため）
+5. `設定 → カスタマーへのメール` で「支払い成功」をオンにすると、Stripe からも領収書メールが届きます。
 
 テスト用カード番号 `4242 4242 4242 4242`（有効期限は未来の日付、CVCは任意）で決済を試せます。
-本番に切り替えるときは、本番モードのキーと Webhook で同じ設定をやり直します。
+
+## 7. KOMOJU の設定（コンビニ払い）
+
+1. KOMOJU 管理画面を **テストモード** にする。
+2. `設定 → API鍵` の秘密鍵を `.env` の `KOMOJU_SECRET` に入れる。
+3. `設定 → Webhook → 追加`
+   - URL：`https://entry.example.com/komoju/webhook`
+   - 秘密トークン：任意の長い文字列を決めて入力し、同じものを `.env` の `KOMOJU_WEBHOOK_SECRET` に入れる
+   - イベント：`payment.authorized`、`payment.captured`、`payment.expired`、`payment.cancelled`、`payment.failed`
+4. `設定 → 決済方法` でコンビニ決済を有効にし、**支払期限** を確認する。
+   期限までに支払いがないと、エントリーは自動で取り消されて枠が空きます。エントリー締切の直前に申し込んだ人の期限が締切後にずれ込むので、締切日の運用（期限を短めにするなど）を決めておいてください。
+
+`KOMOJU_SECRET` が空のあいだは、確認画面に「コンビニ払い」は表示されません（カードだけで受け付けます）。
+
+## 8. 設定を変えたあと
+
+`.env` を変えたら、SSH で `cd ~/kizuna-entry && /usr/bin/php8.3 artisan optimize` を実行して設定を読み込み直します。
+本番に切り替えるときは、Stripe・KOMOJU とも本番モードのキーと Webhook で同じ設定をやり直します。

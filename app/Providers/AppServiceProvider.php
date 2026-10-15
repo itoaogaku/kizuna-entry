@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
-use App\Payments\PaymentGateway;
+use App\Models\Entry;
+use App\Payments\KomojuPaymentGateway;
+use App\Payments\PaymentGateways;
 use App\Payments\StripePaymentGateway;
 use Illuminate\Support\ServiceProvider;
 
@@ -10,9 +12,10 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(PaymentGateway::class, fn () => new StripePaymentGateway(
-            (string) config('services.stripe.secret')
-        ));
+        $this->app->singleton(PaymentGateways::class, fn () => new PaymentGateways([
+            Entry::METHOD_CARD => fn () => new StripePaymentGateway((string) config('services.stripe.secret')),
+            Entry::METHOD_KONBINI => fn () => new KomojuPaymentGateway((string) config('services.komoju.secret')),
+        ]));
     }
 
     public function boot(): void

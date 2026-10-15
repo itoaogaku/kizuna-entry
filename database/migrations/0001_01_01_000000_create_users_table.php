@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('email')->unique();
             $table->boolean('is_admin')->default(false);
+            $table->unsignedSmallInteger('grades_updated_year')->nullable(); // 年度更新（学年の繰り上げ）をした年度
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

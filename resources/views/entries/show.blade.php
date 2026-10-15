@@ -7,12 +7,16 @@
         <dl class="kv">
             <dt>大会</dt><dd>{{ $entry->meet->name }}（{{ $entry->meet->held_on->isoFormat('YYYY年M月D日（ddd）') }}）</dd>
             <dt>状態</dt><dd><span class="badge {{ $entry->status }}">{{ $entry->statusLabel() }}</span></dd>
-            <dt>合計金額</dt><dd>{{ number_format($entry->total_amount) }}円</dd>
+            <dt>合計金額</dt><dd>{{ number_format($entry->total_amount) }}円（{{ $entry->methodLabel() }}）</dd>
             <dt>申込日時</dt><dd>{{ $entry->created_at->format('Y/m/d H:i') }}</dd>
             @if ($entry->paid_at)<dt>入金日時</dt><dd>{{ $entry->paid_at->format('Y/m/d H:i') }}</dd>@endif
         </dl>
         @if ($entry->status === \App\Models\Entry::STATUS_PENDING)
             <div class="actions">
+                @if ($entry->isKonbini() && $entry->payment_instructions_url)
+                    <a class="btn" href="{{ $entry->payment_instructions_url }}" target="_blank" rel="noopener">払込票を開く</a>
+                    <span class="muted">期限までにコンビニでお支払いください。</span>
+                @else
                 <form method="POST" action="{{ route('entries.pay', $entry) }}" class="inline-form">
                     @csrf
                     <button class="btn" type="submit">支払いを続ける</button>
@@ -22,6 +26,7 @@
                     @csrf
                     <button class="btn danger" type="submit">取り消す</button>
                 </form>
+                @endif
             </div>
         @endif
     </div>

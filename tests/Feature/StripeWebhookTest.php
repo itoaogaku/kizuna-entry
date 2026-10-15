@@ -30,7 +30,7 @@ class StripeWebhookTest extends TestCase
             'meet_id' => $event->meet_id,
             'status' => Entry::STATUS_PENDING,
             'total_amount' => 2000,
-            'stripe_session_id' => 'cs_test_1',
+            'payment_session_id' => 'cs_test_1',
         ]);
         $this->entry->items()->create(['athlete_id' => $athlete->id, 'event_id' => $event->id, 'fee' => 2000]);
     }
@@ -68,7 +68,7 @@ class StripeWebhookTest extends TestCase
 
         $this->entry->refresh();
         $this->assertTrue($this->entry->isPaid());
-        $this->assertSame('pi_123', $this->entry->stripe_payment_intent_id);
+        $this->assertSame('pi_123', $this->entry->payment_id);
         $this->assertNotNull($this->entry->paid_at);
         Mail::assertSent(EntryPaidMail::class, 1);
     }

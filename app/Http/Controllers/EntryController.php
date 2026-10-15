@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Entry;
 use App\Models\Meet;
-use App\Payments\PaymentGateway;
+use App\Payments\PaymentGateways;
 use App\Services\EntryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +13,7 @@ use Illuminate\View\View;
 
 class EntryController extends Controller
 {
-    public function __construct(private EntryService $entries, private PaymentGateway $payments) {}
+    public function __construct(private EntryService $entries, private PaymentGateways $payments) {}
 
     public function index(Request $request): View
     {
@@ -32,6 +32,17 @@ class EntryController extends Controller
     {
         if ($redirect = $this->rejectIfClosed($meet)) {
             return $redirect;
+        }
+
+        [$previousMeet, $previousDraft] = $this->entries->previousEntryDraft($request->user(), $meet);
+        if ($request->query('copy') === 'previous') {
+            if ($previousDraft === []) {
+                return redirect()->route('entries.create', $meet)->withErrors(['copy' => '前回の内容から入れられる選手・種目がありませんでした。']);
+            }
+            $request->session()->put("entry_draft.{$meet->id}", $previousDraft);
+
+            return redirect()->route('entries.create', $meet)
+                ->with('status', $previousMeet->name.'と同じ選手・種目・申請タイムを入れました。変えるところだけ直して「確認画面へ」を押してください。');
         }
 
         $athletes = $request->user()->athletes()
@@ -56,6 +67,7 @@ class EntryController extends Controller
                 ->map(fn ($pairs) => $pairs->pluck(1)->map(fn ($id) => (int) $id)),
             'old' => session("entry_draft.{$meet->id}", []),
             'previousTargets' => $this->entries->previousTargets($request->user()),
+            'previousMeet' => $previousDraft === [] ? null : $previousMeet,
         ]);
     }
 
@@ -90,13 +102,14 @@ class EntryController extends Controller
 
         return view('entries.confirm', [
             'meet' => $meet,
+            'methods' => PaymentGateways::available(),
             'selections' => $selections,
             'total' => $selections->sum(fn ($s) => $s['event']->fee),
         ]);
     }
 
     /**
-     * エントリーを確定し、Stripeの決済ページへ移動する。
+     * エントリーを確定し、決済ページ（カード：Stripe／コンビニ：KOMOJU）へ移動する。
      */
     public function store(Request $request, Meet $meet): RedirectResponse
     {
@@ -108,9 +121,14 @@ class EntryController extends Controller
             return redirect()->route('entries.create', $meet);
         }
 
+        $method = (string) $request->input('payment_method', Entry::METHOD_CARD);
+        if (! array_key_exists($method, PaymentGateways::available())) {
+            return redirect()->route('entries.confirm', $meet)->withErrors(['payment_method' => 'お支払い方法を選んでください。']);
+        }
+
         try {
             $selections = $this->entries->buildSelections($request->user(), $meet, $input);
-            $entry = $this->entries->createPendingEntry($request->user(), $meet, $selections);
+            $entry = $this->entries->createPendingEntry($request->user(), $meet, $selections, $method);
         } catch (ValidationException $e) {
             return redirect()->route('entries.create', $meet)->withErrors($e->errors());
         }
@@ -128,18 +146,17 @@ class EntryController extends Controller
     }
 
     /**
-     * Stripeでの支払い後に戻ってくる画面。Webhookより先に着いた場合もここで入金を確認する。
+     * 決済ページから戻ってくる画面。Webhookより先に着いた場合もここで入金を確認する。
      */
-    public function complete(Request $request, Entry $entry): View
+    public function complete(Request $request, Entry $entry): View|RedirectResponse
     {
         $this->authorizeOwner($request, $entry);
 
-        if (! $entry->isPaid() && $entry->stripe_session_id
-            && $request->query('session_id') === $entry->stripe_session_id) {
-            $session = $this->payments->retrieveCheckout($entry->stripe_session_id);
-            if ($session->isPaid()) {
-                $this->entries->markPaid($entry, $session->paymentIntentId);
-                $entry->refresh();
+        if ($entry->payment_session_id && $request->query('session_id') === $entry->payment_session_id) {
+            $session = $this->entries->syncPayment($entry);
+            if ($session?->isAbandoned()) {
+                // KOMOJUの決済ページで支払いをやめた場合
+                return $this->restoreDraft($request, $entry);
             }
         }
 
@@ -155,20 +172,7 @@ class EntryController extends Controller
         $entry->load('items');
 
         if ($this->entries->cancelPending($entry)) {
-            // 選び直しやすいよう、取り消した内容を入力欄に戻す
-            $draft = [];
-            foreach ($entry->items as $item) {
-                $draft[$item->athlete_id]['selected'] = '1';
-                $draft[$item->athlete_id]['pr'] = $item->pr_comment;
-                $draft[$item->athlete_id]['events'][] = [
-                    'event_id' => $item->event_id,
-                    'record' => $item->declared_record,
-                ];
-            }
-            $request->session()->put("entry_draft.{$entry->meet_id}", $draft);
-
-            return redirect()->route('entries.create', $entry->meet_id)
-                ->with('status', 'お支払いを中止しました。内容を確認して、もう一度お申し込みください。');
+            return $this->restoreDraft($request, $entry);
         }
 
         return redirect()->route('entries.show', $entry);
@@ -182,16 +186,15 @@ class EntryController extends Controller
         $this->authorizeOwner($request, $entry);
         abort_unless($entry->status === Entry::STATUS_PENDING, 404);
 
-        if ($entry->stripe_session_id) {
-            $session = $this->payments->retrieveCheckout($entry->stripe_session_id);
-            if ($session->isPaid()) {
-                $this->entries->markPaid($entry, $session->paymentIntentId);
-
-                return redirect()->route('entries.show', $entry);
-            }
-            if ($session->url) {
-                return redirect()->away($session->url);
-            }
+        $session = $this->entries->syncPayment($entry);
+        if ($entry->isPaid()) {
+            return redirect()->route('entries.show', $entry);
+        }
+        if ($session?->isAwaiting() && $session->instructionsUrl) {
+            return redirect()->away($session->instructionsUrl);
+        }
+        if ($entry->status === Entry::STATUS_PENDING && $session?->url && ! $session->closed) {
+            return redirect()->away($session->url);
         }
 
         return redirect()->route('entries.show', $entry)
@@ -213,7 +216,7 @@ class EntryController extends Controller
     private function redirectToCheckout(Entry $entry): RedirectResponse
     {
         try {
-            $session = $this->payments->createCheckout(
+            $session = $this->payments->forEntry($entry)->createCheckout(
                 $entry,
                 route('entries.complete', $entry),
                 route('entries.checkout-cancelled', $entry),
@@ -226,9 +229,27 @@ class EntryController extends Controller
             return redirect()->route('entries.create', $entry->meet_id)
                 ->withErrors(['entry' => '決済ページを開けませんでした。時間をおいてもう一度お試しください。']);
         }
-        $entry->update(['stripe_session_id' => $session->id]);
+        $entry->update(['payment_session_id' => $session->id]);
 
         return redirect()->away($session->url);
+    }
+
+    /**
+     * 支払いをやめたエントリーの内容を入力欄に戻して、選択画面に戻す。
+     */
+    private function restoreDraft(Request $request, Entry $entry): RedirectResponse
+    {
+        $entry->loadMissing('items');
+        $draft = [];
+        foreach ($entry->items as $item) {
+            $draft[$item->athlete_id]['selected'] = '1';
+            $draft[$item->athlete_id]['pr'] = $item->pr_comment;
+            $draft[$item->athlete_id]['events'][] = ['event_id' => $item->event_id, 'record' => $item->declared_record];
+        }
+        $request->session()->put("entry_draft.{$entry->meet_id}", $draft);
+
+        return redirect()->route('entries.create', $entry->meet_id)
+            ->with('status', 'お支払いを中止しました。内容を確認して、もう一度お申し込みください。');
     }
 
     private function rejectIfClosed(Meet $meet): ?RedirectResponse

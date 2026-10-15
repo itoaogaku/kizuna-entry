@@ -14,8 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['admin' => EnsureAdmin::class]);
-        // StripeのWebhookは署名で検証するので、CSRFトークンの確認から外す
-        $middleware->validateCsrfTokens(except: ['stripe/webhook']);
+        // 決済サービスのWebhookは署名で検証するので、CSRFトークンの確認から外す
+        $middleware->validateCsrfTokens(except: ['stripe/webhook', 'komoju/webhook']);
         $middleware->redirectUsersTo('/');
     })
     ->withExceptions(function (Exceptions $exceptions): void {

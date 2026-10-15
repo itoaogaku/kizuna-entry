@@ -39,6 +39,7 @@ class StripePaymentGateway implements PaymentGateway
             ->values()
             ->all();
 
+        // 支払い方法はStripeダッシュボードの設定に従う（カードとLink。コンビニはKOMOJUで受けるのでオフにしておく）
         $session = $this->stripe()->checkout->sessions->create([
             'mode' => 'payment',
             'line_items' => $lineItems,
@@ -88,8 +89,9 @@ class StripePaymentGateway implements PaymentGateway
         return new CheckoutSession(
             id: $session->id,
             url: $session->url,
-            paymentStatus: $session->payment_status,
-            paymentIntentId: is_string($paymentIntent) ? $paymentIntent : $paymentIntent?->id,
+            paymentStatus: $session->payment_status === 'paid' ? CheckoutSession::PAID : CheckoutSession::UNPAID,
+            paymentId: is_string($paymentIntent) ? $paymentIntent : $paymentIntent?->id,
+            closed: $session->status === 'expired',
         );
     }
 }

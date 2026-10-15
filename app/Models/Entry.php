@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['meet_id', 'status', 'total_amount', 'stripe_session_id', 'stripe_payment_intent_id', 'paid_at'])]
+#[Fillable(['meet_id', 'status', 'total_amount', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at'])]
 class Entry extends Model
 {
     use HasFactory;
@@ -18,6 +18,10 @@ class Entry extends Model
     public const STATUS_PAID = 'paid';
 
     public const STATUS_CANCELLED = 'cancelled';
+
+    public const METHOD_CARD = 'card';
+
+    public const METHOD_KONBINI = 'konbini';
 
     public const STATUS_LABELS = [
         self::STATUS_PENDING => '決済待ち',
@@ -49,7 +53,21 @@ class Entry extends Model
 
     public function statusLabel(): string
     {
+        if ($this->status === self::STATUS_PENDING && $this->isKonbini() && $this->payment_instructions_url) {
+            return 'コンビニ支払待ち';
+        }
+
         return self::STATUS_LABELS[$this->status] ?? $this->status;
+    }
+
+    public function methodLabel(): string
+    {
+        return $this->payment_method === self::METHOD_KONBINI ? 'コンビニ払い' : 'クレジットカード';
+    }
+
+    public function isKonbini(): bool
+    {
+        return $this->payment_method === self::METHOD_KONBINI;
     }
 
     public function isPaid(): bool

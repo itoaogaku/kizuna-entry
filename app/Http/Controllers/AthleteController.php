@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Athlete;
 use App\Rules\AthleteRules;
 use App\Services\EntrySheetReader;
+use App\Services\GradeAdvance;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -60,6 +61,32 @@ class AthleteController extends Controller
         $athlete->update($this->validated($request->all()) + ['is_active' => $request->boolean('is_active')]);
 
         return redirect()->route('athletes.index')->with('status', '選手情報を更新しました。');
+    }
+
+    /**
+     * 年度更新の確認画面。
+     */
+    public function advanceForm(Request $request, GradeAdvance $advance): View
+    {
+        return view('athletes.advance', [
+            'rows' => $advance->preview($request->user()),
+            'doneThisYear' => GradeAdvance::isDoneThisYear($request->user()),
+            'fiscalYear' => GradeAdvance::fiscalYear(),
+        ]);
+    }
+
+    public function advance(Request $request, GradeAdvance $advance): RedirectResponse
+    {
+        if (GradeAdvance::isDoneThisYear($request->user()) && ! $request->boolean('again')) {
+            return back()->withErrors(['again' => '今年度の年度更新はすでに行っています。もう一度行う場合は、確認のチェックを入れてください。']);
+        }
+        $choices = array_filter((array) $request->input('choices', []), fn ($v) => in_array($v, [GradeAdvance::RETIRE, GradeAdvance::PROMOTE, GradeAdvance::KEEP], true));
+        $result = $advance->apply($request->user(), $choices);
+
+        return redirect()->route('athletes.index')->with('status', sprintf(
+            '年度更新をしました（学年を上げた選手 %d人・進学 %d人・対象外 %d人）。',
+            $result['advanced'], $result['promoted'], $result['retired'],
+        ));
     }
 
     public function importForm(Request $request): View

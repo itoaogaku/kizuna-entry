@@ -89,5 +89,17 @@ class DatabaseSeeder extends Seeder
                 'declared_record' => $target, 'personal_best' => $best, 'pr_comment' => $pr,
             ]);
         }
+
+        // 「前回と同じ内容で申し込む」の確認用に、次の大会も作る
+        $next = Meet::factory()->create([
+            'name' => '第2回 絆記録会',
+            'held_on' => now()->addMonths(2)->toDateString(),
+            'entry_closes_at' => now()->addWeeks(6),
+        ]);
+        foreach ($events as $i => [$name, $gender, $fee, $capacity]) {
+            $next->events()->create([
+                'name' => $name, 'gender' => $gender, 'fee' => $fee, 'capacity' => $capacity, 'sort_order' => ($i + 1) * 10,
+            ]);
+        }
     }
 }

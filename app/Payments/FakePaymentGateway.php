@@ -6,7 +6,7 @@ use App\Models\Entry;
 use Illuminate\Support\Str;
 
 /**
- * テスト用。Stripeに接続せずに決済の流れを再現する。
+ * テスト用。決済サービスに接続せずに決済の流れを再現する。
  */
 class FakePaymentGateway implements PaymentGateway
 {
@@ -16,11 +16,13 @@ class FakePaymentGateway implements PaymentGateway
     /** @var array<string, bool> */
     public array $expired = [];
 
+    public function __construct(private string $prefix = 'cs_test_') {}
+
     public function createCheckout(Entry $entry, string $successUrl, string $cancelUrl): CheckoutSession
     {
-        $id = 'cs_test_'.Str::random(24);
+        $id = $this->prefix.Str::random(24);
 
-        return $this->sessions[$id] = new CheckoutSession($id, 'https://checkout.stripe.test/'.$id, 'unpaid');
+        return $this->sessions[$id] = new CheckoutSession($id, 'https://checkout.example.test/'.$id, CheckoutSession::UNPAID);
     }
 
     public function retrieveCheckout(string $sessionId): CheckoutSession
@@ -30,15 +32,26 @@ class FakePaymentGateway implements PaymentGateway
 
     public function expireCheckout(string $sessionId): bool
     {
-        if ($this->sessions[$sessionId]->isPaid()) {
+        $session = $this->sessions[$sessionId];
+        if ($session->isPaid() || $session->isAwaiting()) {
             return false;
         }
 
         return $this->expired[$sessionId] = true;
     }
 
-    public function markPaid(string $sessionId, string $paymentIntentId = 'pi_test_123'): void
+    public function markPaid(string $sessionId, string $paymentId = 'pi_test_123'): void
     {
-        $this->sessions[$sessionId] = new CheckoutSession($sessionId, null, 'paid', $paymentIntentId);
+        $this->sessions[$sessionId] = new CheckoutSession($sessionId, null, CheckoutSession::PAID, $paymentId);
+    }
+
+    public function markAwaiting(string $sessionId, string $instructionsUrl = 'https://komoju.test/instructions'): void
+    {
+        $this->sessions[$sessionId] = new CheckoutSession($sessionId, null, CheckoutSession::AWAITING, 'pay_test', false, $instructionsUrl);
+    }
+
+    public function markAbandoned(string $sessionId): void
+    {
+        $this->sessions[$sessionId] = new CheckoutSession($sessionId, null, CheckoutSession::UNPAID, null, true);
     }
 }

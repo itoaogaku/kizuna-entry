@@ -58,8 +58,10 @@ return new class extends Migration
             $table->foreignId('meet_id')->constrained()->cascadeOnDelete();
             $table->string('status')->default('pending'); // pending / paid / cancelled
             $table->unsignedInteger('total_amount');
-            $table->string('stripe_session_id')->nullable()->unique();
-            $table->string('stripe_payment_intent_id')->nullable();
+            $table->string('payment_method', 20)->default('card'); // card=カード（Stripe） / konbini=コンビニ（KOMOJU）
+            $table->string('payment_session_id')->nullable()->unique(); // 決済ページのID
+            $table->string('payment_id')->nullable(); // 決済のID（Stripe PaymentIntent / KOMOJU Payment）
+            $table->string('payment_instructions_url')->nullable(); // コンビニ払いの払込票URL
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });
