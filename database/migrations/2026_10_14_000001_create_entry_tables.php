@@ -12,14 +12,15 @@ return new class extends Migration
         Schema::create('athletes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('last_name');
-            $table->string('first_name');
-            $table->string('last_kana');
-            $table->string('first_kana');
+            $table->string('last_name'); // 姓
+            $table->string('first_name'); // 名
+            $table->string('kana'); // フリガナ（全角カタカナ。例：スズキ タロウ）
+            $table->unsignedTinyInteger('grade')->nullable(); // 学年（学生の場合）
             $table->string('gender', 1); // M / F
-            $table->date('birthdate');
-            $table->string('category')->nullable(); // 区分（中学・高校・大学・一般など）
-            $table->string('jaaf_id')->nullable(); // 陸連登録番号
+            $table->string('association')->nullable(); // 所属陸協（例：東京）
+            $table->string('category')->nullable(); // 種別（中学生・高校生・大学生・一般）
+            $table->date('birthdate')->nullable(); // 生年月日（任意）
+            $table->string('jaaf_id')->nullable(); // 陸連登録番号（任意）
             $table->boolean('is_active')->default(true); // 引退・卒業した選手は一覧から外す
             $table->timestamps();
         });
@@ -69,7 +70,9 @@ return new class extends Migration
             $table->foreignId('entry_id')->constrained()->cascadeOnDelete();
             $table->foreignId('athlete_id')->constrained()->cascadeOnDelete();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
-            $table->string('declared_record')->nullable(); // 申告記録（例：15:32.10）
+            $table->string('declared_record')->nullable(); // 申請タイム（例：14'30）
+            $table->string('personal_best')->nullable(); // 自己ベスト（例：14'45）
+            $table->string('pr_comment')->nullable(); // PRしたい一言（実況で使用）
             $table->unsignedInteger('fee');
             $table->timestamps();
         });

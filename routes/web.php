@@ -66,6 +66,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/events/{event}', [Admin\EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [Admin\EventController::class, 'destroy'])->name('events.destroy');
     Route::get('/meets/{meet}/entries', [Admin\EntryController::class, 'index'])->name('entries.index');
-    Route::get('/meets/{meet}/entries.csv', [Admin\EntryController::class, 'export'])->name('entries.export');
+    Route::get('/meets/{meet}/entries.xlsx', [Admin\EntryController::class, 'export'])->name('entries.export');
     Route::get('/teams', [Admin\TeamController::class, 'index'])->name('teams.index');
 });

@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\Meet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class AdminTest extends TestCase
@@ -41,25 +42,31 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('events', ['meet_id' => $meet->id, 'name' => '一般男子5000m', 'fee' => 2000, 'capacity' => 60]);
     }
 
-    public function test_csv_export_lists_paid_entries_for_excel(): void
+    public function test_excel_export_uses_entry_sheet_columns_sorted_by_declared_time(): void
     {
         $admin = User::factory()->admin()->create();
         $team = User::factory()->create(['team_name' => '絆AC']);
-        $event = Event::factory()->create(['name' => '一般男子5000m']);
-        $athlete = Athlete::factory()->for($team)->create(['last_name' => '青山', 'first_name' => '駿', 'jaaf_id' => '=CMD()']);
+        $event = Event::factory()->create(['name' => '5000m', 'gender' => null]);
+        $slow = Athlete::factory()->for($team)->create(['last_name' => '青山', 'first_name' => '駿', 'kana' => 'アオヤマ シュン', 'grade' => 2, 'category' => '大学生']);
+        $fast = Athlete::factory()->for($team)->create(['last_name' => '伊藤', 'first_name' => '陸', 'kana' => '=CMD()']);
+        $cancelled = Athlete::factory()->for($team)->create(['last_name' => '取消']);
 
-        foreach ([Entry::STATUS_PAID, Entry::STATUS_CANCELLED] as $status) {
-            $entry = $team->entries()->create(['meet_id' => $event->meet_id, 'status' => $status, 'total_amount' => 1500, 'paid_at' => now()]);
-            $entry->items()->create(['athlete_id' => $athlete->id, 'event_id' => $event->id, 'fee' => 1500, 'declared_record' => '15:32.10']);
+        foreach ([[$slow, "15'10", Entry::STATUS_PAID], [$fast, "14'30", Entry::STATUS_PAID], [$cancelled, "13'00", Entry::STATUS_CANCELLED]] as [$athlete, $time, $status]) {
+            $entry = $team->entries()->create(['meet_id' => $event->meet_id, 'status' => $status, 'total_amount' => 2200, 'paid_at' => now()]);
+            $entry->items()->create(['athlete_id' => $athlete->id, 'event_id' => $event->id, 'fee' => 2200, 'declared_record' => $time, 'personal_best' => "14'45", 'pr_comment' => '練習量No.1']);
         }
 
-        $csv = $this->actingAs($admin)->get(route('admin.entries.export', $event->meet))
-            ->assertOk()
-            ->streamedContent();
+        $response = $this->actingAs($admin)->get(route('admin.entries.export', $event->meet))->assertOk();
+        $path = tempnam(sys_get_temp_dir(), 'export');
+        file_put_contents($path, $response->streamedContent());
+        $book = IOFactory::load($path);
+        $rows = $book->getSheet(0)->toArray(null, false, false, false);
 
-        $this->assertStringStartsWith("\xEF\xBB\xBF受付番号,申込区分,種目,氏名", $csv);
-        $this->assertStringContainsString('一般男子5000m,"青山 駿"', $csv);
-        $this->assertStringContainsString("'=CMD()", $csv);
-        $this->assertSame(2, substr_count(trim($csv), "\n") + 1); // 見出し＋入金済み1件
+        $this->assertSame(['No', '団体名', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '申込み種目', '申請タイム', '自己ベスト', '種別', 'PRしたい一言', '料金'], array_slice($rows[0], 0, 14));
+        $this->assertCount(3, $rows); // 見出し＋入金済み2件（取消は出さない）
+        $this->assertSame(['伊藤', "14'30"], [$rows[1][2], $rows[1][9]]); // 申請タイムの速い順
+        $this->assertSame([2, '絆AC', '青山', '駿', 'アオヤマ シュン', 2, '男'], array_slice($rows[2], 0, 7));
+        $this->assertSame('=CMD()', $book->getSheet(0)->getCell('E2')->getValue()); // 数式にしない
+        $this->assertSame('5000m', $book->getSheet(1)->getTitle()); // 種目ごとのシート
     }
 }

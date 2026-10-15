@@ -5,7 +5,7 @@
     <h1>{{ $meet->name }} エントリー</h1>
     <p class="muted">
         開催日 {{ $meet->held_on->isoFormat('YYYY年M月D日（ddd）') }}・締切 {{ $meet->entry_closes_at->format('Y/m/d H:i') }}・1人{{ $meet->max_events_per_athlete }}種目まで<br>
-        出場する選手にチェックを入れ、種目と申告記録を選んでください。
+        出場する選手にチェックを入れ、申込み種目・申請タイム（例 14'30）を入力してください。自己ベストとPRしたい一言は任意です。
     </p>
 
     @if ($athletes->isEmpty())
@@ -22,11 +22,11 @@
                     <tr>
                         <th class="sticky-col">出場・氏名</th>
                         <th>性別</th>
-                        <th>区分</th>
+                        <th>種別・学年</th>
                         @for ($i = 0; $i < $meet->max_events_per_athlete; $i++)
-                            <th>種目{{ $meet->max_events_per_athlete > 1 ? $i + 1 : '' }}</th>
-                            <th>申告記録</th>
+                            <th>申込み種目{{ $meet->max_events_per_athlete > 1 ? $i + 1 : '' }}<br><span class="muted">申請タイム／自己ベスト</span></th>
                         @endfor
+                        <th>PRしたい一言 <span class="muted">（任意・実況で使用）</span></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -40,18 +40,18 @@
                             <td class="sticky-col">
                                 <label class="athlete-pick">
                                     <input type="checkbox" name="items[{{ $athlete->id }}][selected]" value="1" data-select @checked($checked)>
-                                    <span>{{ $athlete->fullName() }}<br><span class="muted">{{ $athlete->fullKana() }}</span></span>
+                                    <span>{{ $athlete->fullName() }}<br><span class="muted">{{ $athlete->kana }}</span></span>
                                 </label>
                                 @if ($already->isNotEmpty())
                                     <span class="badge paid">申込済：{{ $events->whereIn('id', $already)->pluck('name')->implode('、') }}</span>
                                 @endif
                             </td>
                             <td>{{ $athlete->genderLabel() }}</td>
-                            <td>{{ $athlete->category }}</td>
+                            <td>{{ $athlete->category }}{{ $athlete->grade ? ' '.$athlete->grade.'年' : '' }}</td>
                             @for ($i = 0; $i < $meet->max_events_per_athlete; $i++)
                                 @php $slot = $row['events'][$i] ?? []; @endphp
-                                <td>
-                                    <select name="items[{{ $athlete->id }}][events][{{ $i }}][event_id]" data-event aria-label="種目">
+                                <td class="slot">
+                                    <select name="items[{{ $athlete->id }}][events][{{ $i }}][event_id]" data-event aria-label="申込み種目">
                                         <option value="">―</option>
                                         @foreach ($events as $event)
                                             @continue (! $event->allowsGender($athlete->gender))
@@ -66,12 +66,18 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                </td>
-                                <td>
-                                    <input type="text" name="items[{{ $athlete->id }}][events][{{ $i }}][record]" value="{{ $slot['record'] ?? '' }}"
-                                           placeholder="例 15:32.10" aria-label="申告記録" size="10">
+                                    <div class="times">
+                                        <input type="text" name="items[{{ $athlete->id }}][events][{{ $i }}][record]" value="{{ $slot['record'] ?? '' }}"
+                                               placeholder="例 14'30" aria-label="申請タイム" inputmode="text">
+                                        <input type="text" name="items[{{ $athlete->id }}][events][{{ $i }}][best]" value="{{ $slot['best'] ?? '' }}"
+                                               placeholder="任意" aria-label="自己ベスト" inputmode="text">
+                                    </div>
                                 </td>
                             @endfor
+                            <td>
+                                <input type="text" name="items[{{ $athlete->id }}][pr]" value="{{ $row['pr'] ?? '' }}" maxlength="100"
+                                       placeholder="例：チーム内No.1の練習量" aria-label="PRしたい一言" class="pr">
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>

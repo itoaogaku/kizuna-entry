@@ -30,16 +30,16 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $athletes = [
-            ['青山', '駿', 'アオヤマ', 'シュン', 'M', '2004-05-12', '大学'],
-            ['伊藤', '陸', 'イトウ', 'リク', 'M', '2005-09-30', '大学'],
-            ['佐藤', '翔太', 'サトウ', 'ショウタ', 'M', '2008-01-20', '高校'],
-            ['鈴木', '美咲', 'スズキ', 'ミサキ', 'F', '2007-11-03', '高校'],
-            ['高橋', '結衣', 'タカハシ', 'ユイ', 'F', '1998-07-07', '一般'],
+            ['青山', '駿', 'アオヤマ シュン', 'M', '大学生', 2, '東京'],
+            ['伊藤', '陸', 'イトウ リク', 'M', '大学生', 1, '神奈川'],
+            ['佐藤', '翔太', 'サトウ ショウタ', 'M', '高校生', 3, '東京'],
+            ['鈴木', '美咲', 'スズキ ミサキ', 'F', '高校生', 2, '埼玉'],
+            ['高橋', '結衣', 'タカハシ ユイ', 'F', '一般', null, '千葉'],
         ];
-        foreach ($athletes as [$ln, $fn, $lk, $fk, $g, $b, $c]) {
+        foreach ($athletes as [$ln, $fn, $kana, $g, $c, $grade, $assoc]) {
             Athlete::factory()->for($team)->create([
-                'last_name' => $ln, 'first_name' => $fn, 'last_kana' => $lk, 'first_kana' => $fk,
-                'gender' => $g, 'birthdate' => $b, 'category' => $c,
+                'last_name' => $ln, 'first_name' => $fn, 'kana' => $kana,
+                'gender' => $g, 'category' => $c, 'grade' => $grade, 'association' => $assoc,
             ]);
         }
 
@@ -49,20 +49,20 @@ class DatabaseSeeder extends Seeder
             'email' => 'solo@example.com',
         ]);
         Athlete::factory()->for($solo)->create([
-            'last_name' => '中村', 'first_name' => '光', 'last_kana' => 'ナカムラ', 'first_kana' => 'ヒカル',
-            'gender' => 'M', 'birthdate' => '2003-02-14', 'category' => '一般',
+            'last_name' => '中村', 'first_name' => '光', 'kana' => 'ナカムラ ヒカル',
+            'gender' => 'M', 'category' => '一般', 'association' => '東京',
         ]);
 
         $meet = Meet::factory()->create([
             'name' => '第1回 絆記録会',
-            'notes' => "参加費は1種目ごとにかかります。\nお支払い後の返金はできません。",
+            'notes' => "料金は1種目ごとにかかります。\nお支払い後の返金はできません。\n組変更希望は、暫定版スタートリスト掲載後に組変更希望用紙で受け付けます。",
         ]);
+        // 種目と料金は仮の設定（エントリーシートの記入例：5000m 2,200円）
         $events = [
-            ['一般男子1500m', 'M', 1500, 40],
-            ['一般男子5000m', 'M', 2000, 60],
-            ['一般女子1500m', 'F', 1500, 40],
-            ['一般女子3000m', 'F', 2000, 40],
-            ['中学男子3000m', 'M', 1000, null],
+            ['1500m', null, 2000, 80],
+            ['3000m', null, 2000, 80],
+            ['5000m', null, 2200, 120],
+            ['10000m', null, 2500, 60],
         ];
         foreach ($events as $i => [$name, $gender, $fee, $capacity]) {
             $meet->events()->create([

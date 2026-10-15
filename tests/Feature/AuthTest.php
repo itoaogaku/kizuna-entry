@@ -82,8 +82,8 @@ class AuthTest extends TestCase
     {
         $this->post('/individual/register', [
             'last_name' => '中村', 'first_name' => '光',
-            'last_kana' => 'なかむら', 'first_kana' => 'ひかる',
-            'gender' => 'M', 'birthdate' => '2003-02-14',
+            'kana' => 'なかむら ひかる',
+            'gender' => 'M', 'category' => '大学生', 'grade' => '2', 'association' => '東京',
             'team_name' => '〇〇大学',
             'phone' => '090-0000-0000',
             'email' => 'solo@example.com',
@@ -97,7 +97,7 @@ class AuthTest extends TestCase
         $this->assertTrue($user->isIndividual());
         $this->assertSame('中村 光', $user->name);
         $this->assertNull($user->login_name);
-        $this->assertDatabaseHas('athletes', ['user_id' => $user->id, 'last_kana' => 'ナカムラ', 'first_kana' => 'ヒカル']);
+        $this->assertDatabaseHas('athletes', ['user_id' => $user->id, 'kana' => 'ナカムラ ヒカル', 'grade' => 2, 'association' => '東京']);
     }
 
     public function test_individual_logs_in_with_email(): void

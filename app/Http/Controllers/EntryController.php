@@ -37,8 +37,7 @@ class EntryController extends Controller
         $athletes = $request->user()->athletes()
             ->where('is_active', true)
             ->orderBy('gender')
-            ->orderBy('last_kana')
-            ->orderBy('first_kana')
+            ->orderBy('kana')
             ->get();
 
         $entered = $this->entries->enteredPairs($meet);
@@ -159,7 +158,12 @@ class EntryController extends Controller
             $draft = [];
             foreach ($entry->items as $item) {
                 $draft[$item->athlete_id]['selected'] = '1';
-                $draft[$item->athlete_id]['events'][] = ['event_id' => $item->event_id, 'record' => $item->declared_record];
+                $draft[$item->athlete_id]['pr'] = $item->pr_comment;
+                $draft[$item->athlete_id]['events'][] = [
+                    'event_id' => $item->event_id,
+                    'record' => $item->declared_record,
+                    'best' => $item->personal_best,
+                ];
             }
             $request->session()->put("entry_draft.{$entry->meet_id}", $draft);
 

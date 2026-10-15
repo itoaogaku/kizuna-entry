@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Athlete;
 use App\Rules\AthleteRules;
-use Carbon\Carbon;
+use App\Services\EntrySheetReader;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,14 +14,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AthleteController extends Controller
 {
-    private const CSV_HEADER = ['姓', '名', 'セイ', 'メイ', '性別', '生年月日', '区分', '陸連登録番号'];
+    private const CSV_HEADER = ['姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '種別', '生年月日', '陸連登録番号'];
 
     public function index(Request $request): View
     {
         $athletes = $request->user()->athletes()
             ->orderByDesc('is_active')
-            ->orderBy('last_kana')
-            ->orderBy('first_kana')
+            ->orderBy('kana')
             ->get();
 
         return view('athletes.index', compact('athletes'));
@@ -76,61 +75,65 @@ class AthleteController extends Controller
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, self::CSV_HEADER);
-            fputcsv($out, ['絆', '太郎', 'キズナ', 'タロウ', '男', '2008/04/01', '高校', '']);
+            fputcsv($out, ['鈴木', '太郎', 'スズキ タロウ', '3', '男', '東京', '高校生', '', '']);
             fclose($out);
         }, 'athletes_template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**
-     * Excelで作ったCSV（UTF-8またはShift_JIS）から選手をまとめて登録する。
+     * エントリーシート（Excel）またはCSVから選手をまとめて登録する。
+     * 同じ選手が複数行（複数種目）あっても1人として登録し、登録済みの選手は飛ばす。
      */
-    public function import(Request $request): RedirectResponse
+    public function import(Request $request, EntrySheetReader $reader): RedirectResponse
     {
         $this->denyIndividual($request);
-        $request->validate(['csv' => ['required', 'file', 'max:1024']]);
+        $request->validate(['file' => ['required', 'file', 'max:5120', 'extensions:xlsx,xls,csv']]);
+        $file = $request->file('file');
 
-        $content = file_get_contents($request->file('csv')->getRealPath());
-        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
-        if (! mb_check_encoding($content, 'UTF-8')) {
-            $content = mb_convert_encoding($content, 'UTF-8', 'SJIS-win');
+        try {
+            $lines = $reader->read($file->getRealPath(), $file->getClientOriginalExtension());
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['file' => $e->getMessage()]);
+        } catch (\Throwable) {
+            return back()->withErrors(['file' => 'ファイルを読み込めませんでした。Excel（.xlsx）またはCSVで保存したファイルを選んでください。']);
         }
 
-        $lines = preg_split('/\r\n|\r|\n/', trim($content));
+        $existing = $request->user()->athletes()->get()
+            ->map(fn ($a) => $this->nameKey($a->last_name, $a->first_name));
         $rows = [];
         $errors = [];
-        foreach ($lines as $n => $line) {
-            if ($n === 0 || trim($line) === '') {
-                continue; // 1行目は見出し
-            }
-            $cols = array_pad(str_getcsv($line), 8, '');
-            $data = [
-                'last_name' => trim($cols[0]),
-                'first_name' => trim($cols[1]),
-                'last_kana' => mb_convert_kana(trim($cols[2]), 'KVC'),
-                'first_kana' => mb_convert_kana(trim($cols[3]), 'KVC'),
-                'gender' => match (trim($cols[4])) {
-                    '男', '男子', 'M', 'm' => 'M',
-                    '女', '女子', 'F', 'f' => 'F',
-                    default => trim($cols[4]),
-                },
-                'birthdate' => $this->parseDate(trim($cols[5])),
-                'category' => trim($cols[6]) ?: null,
-                'jaaf_id' => trim($cols[7]) ?: null,
-            ];
-            $v = Validator::make($data, $this->rules());
-            if ($v->fails()) {
-                $errors[] = ($n + 1).'行目：'.implode(' ', $v->errors()->all());
+        $skipped = 0;
+        foreach ($lines as ['line' => $line, 'data' => $data]) {
+            $data['gender'] = match (trim((string) ($data['gender'] ?? ''))) {
+                '男', '男子', 'M', 'm' => 'M',
+                '女', '女子', 'F', 'f' => 'F',
+                default => $data['gender'] ?? null,
+            };
+            $data['birthdate'] = EntrySheetReader::parseDate($data['birthdate'] ?? null);
+            $data['category'] = AthleteRules::normalizeCategory($data['category'] ?? null);
+            $data = AthleteRules::normalize($data);
+
+            $key = $this->nameKey((string) ($data['last_name'] ?? ''), (string) ($data['first_name'] ?? ''));
+            if ($existing->contains($key) || isset($rows[$key])) {
+                $skipped++;
 
                 continue;
             }
-            $rows[] = $v->validated();
+
+            $v = Validator::make($data, $this->rules());
+            if ($v->fails()) {
+                $errors[] = $line.'行目（'.($data['last_name'] ?? '').' '.($data['first_name'] ?? '').'）：'.implode(' ', $v->errors()->all());
+
+                continue;
+            }
+            $rows[$key] = $v->validated();
         }
 
         if ($errors !== []) {
             return back()->withErrors($errors);
         }
         if ($rows === []) {
-            return back()->withErrors(['csv' => '登録できる行がありませんでした。']);
+            return back()->withErrors(['file' => $skipped > 0 ? 'ファイルの選手はすべて登録済みでした。' : '登録できる選手が見つかりませんでした。']);
         }
 
         DB::transaction(function () use ($request, $rows) {
@@ -139,22 +142,17 @@ class AthleteController extends Controller
             }
         });
 
-        return redirect()->route('athletes.index')->with('status', count($rows).'人の選手を登録しました。');
+        $message = count($rows).'人の選手を登録しました。';
+        if ($skipped > 0) {
+            $message .= '（登録済み・重複の'.$skipped.'行は飛ばしました）';
+        }
+
+        return redirect()->route('athletes.index')->with('status', $message);
     }
 
-    private function parseDate(string $value): ?string
+    private function nameKey(string $last, string $first): string
     {
-        if ($value === '') {
-            return null;
-        }
-        if (is_numeric($value)) { // Excelのシリアル値
-            return Carbon::create(1899, 12, 30)->addDays((int) $value)->toDateString();
-        }
-        try {
-            return Carbon::parse(str_replace(['年', '月', '日', '.'], ['-', '-', '', '-'], $value))->toDateString();
-        } catch (\Throwable) {
-            return $value;
-        }
+        return preg_replace('/\s+/u', '', mb_convert_kana($last.$first, 'asKV'));
     }
 
     private function rules(): array

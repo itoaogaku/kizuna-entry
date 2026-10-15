@@ -10,6 +10,7 @@ use App\Models\Event;
 use App\Models\Meet;
 use App\Models\User;
 use App\Payments\PaymentGateway;
+use App\Support\RaceTime;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -22,8 +23,8 @@ class EntryService
     /**
      * フォームの入力（選手ごとの種目選択）を検証し、明細の一覧に変換する。
      *
-     * @param  array<int|string, array{selected?: mixed, events?: array<int, array{event_id?: mixed, record?: mixed}>}>  $input
-     * @return Collection<int, array{athlete: Athlete, event: Event, record: ?string}>
+     * @param  array<int|string, array{selected?: mixed, pr?: mixed, events?: array<int, array{event_id?: mixed, record?: mixed, best?: mixed}>}>  $input
+     * @return Collection<int, array{athlete: Athlete, event: Event, record: string, best: ?string, pr: ?string}>
      */
     public function buildSelections(User $user, Meet $meet, array $input): Collection
     {
@@ -64,6 +65,8 @@ class EntryService
                 continue;
             }
 
+            $pr = trim((string) ($row['pr'] ?? ''));
+
             foreach ($chosen as $i => $e) {
                 $event = $events->get((int) $e['event_id']);
                 $key = "items.$athleteId.events.$i";
@@ -82,9 +85,25 @@ class EntryService
 
                     continue;
                 }
-                $record = trim((string) ($e['record'] ?? ''));
-                if (mb_strlen($record) > 20) {
-                    $errors[$key] = $athlete->fullName().'：申告記録は20文字以内で入力してください。';
+                $record = RaceTime::normalize($e['record'] ?? null);
+                $best = RaceTime::normalize($e['best'] ?? null);
+                if ($record === null) {
+                    $errors[$key] = $athlete->fullName().'：'.$event->name.'の申請タイムを入力してください。';
+
+                    continue;
+                }
+                if (! RaceTime::isValid($record)) {
+                    $errors[$key] = $athlete->fullName().'：申請タイム「'.$record.'」の形が正しくありません（例：14\'30）。';
+
+                    continue;
+                }
+                if ($best !== null && ! RaceTime::isValid($best)) {
+                    $errors[$key] = $athlete->fullName().'：自己ベスト「'.$best.'」の形が正しくありません（例：14\'45）。';
+
+                    continue;
+                }
+                if (mb_strlen($pr) > 100) {
+                    $errors["items.$athleteId.pr"] = $athlete->fullName().'：PRしたい一言は100文字以内で入力してください。';
 
                     continue;
                 }
@@ -92,7 +111,9 @@ class EntryService
                 $selections->push([
                     'athlete' => $athlete,
                     'event' => $event,
-                    'record' => $record === '' ? null : mb_convert_kana($record, 'as'),
+                    'record' => $record,
+                    'best' => $best,
+                    'pr' => $pr === '' ? null : $pr,
                 ]);
             }
         }
@@ -110,7 +131,7 @@ class EntryService
     /**
      * 決済待ちのエントリーを作成する。定員はここで最終確認する。
      *
-     * @param  Collection<int, array{athlete: Athlete, event: Event, record: ?string}>  $selections
+     * @param  Collection<int, array{athlete: Athlete, event: Event, record: string, best: ?string, pr: ?string}>  $selections
      */
     public function createPendingEntry(User $user, Meet $meet, Collection $selections): Entry
     {
@@ -150,6 +171,8 @@ class EntryService
                     'athlete_id' => $s['athlete']->id,
                     'event_id' => $s['event']->id,
                     'declared_record' => $s['record'],
+                    'personal_best' => $s['best'] ?? null,
+                    'pr_comment' => $s['pr'] ?? null,
                     'fee' => $events[$s['event']->id]->fee,
                 ]);
             }

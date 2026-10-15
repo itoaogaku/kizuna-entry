@@ -6,11 +6,11 @@
     @include('admin.nav')
     <form method="GET" class="actions" style="margin-bottom:16px">
         <select name="status" onchange="this.form.submit()" style="width:auto">
-            @foreach (['paid' => '入金済み', 'pending' => '決済待ち', 'cancelled' => '取消', 'all' => 'すべて'] as $value => $label)
+            @foreach ($statusOptions as $value => $label)
                 <option value="{{ $value }}" @selected($status === $value)>{{ $label }}</option>
             @endforeach
         </select>
-        <a class="btn" href="{{ route('admin.entries.export', ['meet' => $meet, 'status' => $status]) }}">CSVダウンロード（Excel用）</a>
+        <a class="btn" href="{{ route('admin.entries.export', ['meet' => $meet, 'status' => $status]) }}">Excel（エントリーシート形式）でダウンロード</a>
         <span class="muted">{{ $entries->count() }}件・選手のべ{{ $entries->sum(fn ($e) => $e->items->count()) }}人・合計{{ number_format($entries->sum('total_amount')) }}円</span>
     </form>
 
@@ -25,7 +25,7 @@
                     <td>{{ $entry->user->name }}<br><span class="muted">{{ $entry->user->email }} / {{ $entry->user->phone }}</span></td>
                     <td style="white-space:normal">
                         @foreach ($entry->items as $item)
-                            {{ $item->athlete->fullName() }}：{{ $item->event->name }}{{ $item->declared_record ? '（'.$item->declared_record.'）' : '' }}<br>
+                            {{ $item->athlete->fullName() }}：{{ $item->event->name }}（{{ $item->declared_record }}）<br>
                         @endforeach
                     </td>
                     <td class="num">{{ number_format($entry->total_amount) }}円</td>

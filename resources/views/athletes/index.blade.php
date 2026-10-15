@@ -20,17 +20,17 @@
         <div class="table-wrap">
             <table>
                 <thead>
-                <tr><th>氏名</th><th>フリガナ</th><th>性別</th><th>生年月日</th><th>区分</th><th>陸連登録番号</th><th></th></tr>
+                <tr><th>氏名</th><th>フリガナ</th><th>性別</th><th>種別</th><th>学年</th><th>所属陸協</th><th></th></tr>
                 </thead>
                 <tbody>
                 @foreach ($athletes as $athlete)
                     <tr class="{{ $athlete->is_active ? '' : 'inactive' }}">
                         <td>{{ $athlete->fullName() }} @unless ($athlete->is_active)<span class="badge">対象外</span>@endunless</td>
-                        <td>{{ $athlete->fullKana() }}</td>
+                        <td>{{ $athlete->kana }}</td>
                         <td>{{ $athlete->genderLabel() }}</td>
-                        <td>{{ $athlete->birthdate->format('Y/m/d') }}</td>
                         <td>{{ $athlete->category }}</td>
-                        <td>{{ $athlete->jaaf_id }}</td>
+                        <td>{{ $athlete->grade ? $athlete->grade.'年' : '' }}</td>
+                        <td>{{ $athlete->association }}</td>
                         <td><a href="{{ route('athletes.edit', $athlete) }}">編集</a></td>
                     </tr>
                 @endforeach

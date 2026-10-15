@@ -69,9 +69,9 @@ class EntryFlowTest extends TestCase
         $notSelected = Athlete::factory()->for($this->team)->create();
 
         $this->actingAs($this->team)->post(route('entries.review', $this->meet), ['items' => [
-            $man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => '１５：３２．１０']]],
-            $woman->id => ['selected' => '1', 'events' => [['event_id' => $this->women3000->id, 'record' => '']]],
-            $notSelected->id => ['events' => [['event_id' => $this->men5000->id]]],
+            $man->id => ['selected' => '1', 'pr' => 'チーム内No.1の練習量', 'events' => [['event_id' => $this->men5000->id, 'record' => '１４’３０', 'best' => "14'45"]]],
+            $woman->id => ['selected' => '1', 'events' => [['event_id' => $this->women3000->id, 'record' => "10'05"]]],
+            $notSelected->id => ['events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]],
         ]])->assertRedirect(route('entries.confirm', $this->meet));
 
         $this->actingAs($this->team)->get(route('entries.confirm', $this->meet))
@@ -84,7 +84,11 @@ class EntryFlowTest extends TestCase
         $this->assertSame(Entry::STATUS_PENDING, $entry->status);
         $this->assertSame(3500, $entry->total_amount);
         $this->assertCount(2, $entry->items);
-        $this->assertSame('15:32.10', $entry->items->firstWhere('athlete_id', $man->id)->declared_record);
+        $manItem = $entry->items->firstWhere('athlete_id', $man->id);
+        $this->assertSame("14'30", $manItem->declared_record);
+        $this->assertSame("14'45", $manItem->personal_best);
+        $this->assertSame('チーム内No.1の練習量', $manItem->pr_comment);
+        $this->assertNull($entry->items->firstWhere('athlete_id', $woman->id)->personal_best);
         $response->assertRedirect('https://checkout.stripe.test/'.$entry->stripe_session_id);
         Mail::assertNothingSent();
     }
@@ -94,17 +98,28 @@ class EntryFlowTest extends TestCase
         $man = Athlete::factory()->for($this->team)->create();
 
         $this->actingAs($this->team)->post(route('entries.review', $this->meet), ['items' => [
-            $man->id => ['selected' => '1', 'events' => [['event_id' => $this->women3000->id]]],
+            $man->id => ['selected' => '1', 'events' => [['event_id' => $this->women3000->id, 'record' => "15'00"]]],
         ]])->assertSessionHasErrors();
 
         $this->assertDatabaseCount('entries', 0);
+    }
+
+    public function test_declared_time_is_required_and_must_look_like_a_time(): void
+    {
+        $man = Athlete::factory()->for($this->team)->create();
+
+        foreach (['', 'はやい'] as $record) {
+            $this->actingAs($this->team)->post(route('entries.review', $this->meet), ['items' => [
+                $man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => $record]]],
+            ]])->assertSessionHasErrors();
+        }
     }
 
     public function test_cannot_enter_other_teams_athlete(): void
     {
         $other = Athlete::factory()->create();
 
-        $this->enter([$other->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]]]);
+        $this->enter([$other->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]]);
 
         $this->assertDatabaseCount('entries', 0);
     }
@@ -116,14 +131,14 @@ class EntryFlowTest extends TestCase
         $man = Athlete::factory()->for($this->team)->create();
 
         $this->actingAs($this->team)->post(route('entries.review', $this->meet), ['items' => [
-            $man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id], ['event_id' => $other->id]]],
+            $man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"], ['event_id' => $other->id, 'record' => "15'00"]]],
         ]])->assertSessionHasErrors();
     }
 
     public function test_same_athlete_cannot_enter_same_event_twice(): void
     {
         $man = Athlete::factory()->for($this->team)->create();
-        $items = [$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]]];
+        $items = [$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]];
 
         $this->enter($items);
         $this->enter($items)->assertSessionHasErrors();
@@ -137,8 +152,8 @@ class EntryFlowTest extends TestCase
         $first = Athlete::factory()->for($this->team)->create();
         $second = Athlete::factory()->for($this->team)->create();
 
-        $this->enter([$first->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]]]);
-        $this->enter([$second->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]]])
+        $this->enter([$first->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]]);
+        $this->enter([$second->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]])
             ->assertSessionHasErrors();
 
         $this->assertDatabaseCount('entries', 1);
@@ -155,7 +170,7 @@ class EntryFlowTest extends TestCase
     public function test_returning_from_stripe_marks_paid_and_sends_mail_once(): void
     {
         $man = Athlete::factory()->for($this->team)->create();
-        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]]]);
+        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]]);
         $entry = Entry::sole();
         $this->payments->markPaid($entry->stripe_session_id, 'pi_abc');
 
@@ -174,7 +189,7 @@ class EntryFlowTest extends TestCase
     {
         $this->men5000->update(['capacity' => 1]);
         $man = Athlete::factory()->for($this->team)->create();
-        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => '15:00']]]]);
+        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00", 'best' => "14'50"]]]]);
         $entry = Entry::sole();
 
         $this->actingAs($this->team)->get(route('entries.checkout-cancelled', $entry))
@@ -182,17 +197,17 @@ class EntryFlowTest extends TestCase
 
         $this->assertSame(Entry::STATUS_CANCELLED, $entry->fresh()->status);
         $this->assertTrue($this->payments->expired[$entry->stripe_session_id]);
-        $this->actingAs($this->team)->get(route('entries.create', $this->meet))->assertSee('value="15:00"', false);
+        $this->actingAs($this->team)->get(route('entries.create', $this->meet))->assertSee('value="14&#039;50"', false);
 
         // 枠が空いたので、もう一度申し込める
-        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]]]);
+        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]]);
         $this->assertSame(1, Entry::where('status', Entry::STATUS_PENDING)->count());
     }
 
     public function test_cannot_view_other_teams_entry(): void
     {
         $man = Athlete::factory()->for($this->team)->create();
-        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]]]);
+        $this->enter([$man->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]]]);
 
         $this->actingAs(User::factory()->create())
             ->get(route('entries.show', Entry::sole()))
@@ -205,7 +220,7 @@ class EntryFlowTest extends TestCase
         $me = Athlete::factory()->for($solo)->create();
 
         $this->actingAs($solo)->post(route('entries.review', $this->meet), ['items' => [
-            $me->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id]]],
+            $me->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]],
         ]])->assertRedirect(route('entries.confirm', $this->meet));
         $this->actingAs($solo)->post(route('entries.store', $this->meet));
 

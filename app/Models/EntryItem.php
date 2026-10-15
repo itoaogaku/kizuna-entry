@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['athlete_id', 'event_id', 'declared_record', 'fee'])]
+#[Fillable(['athlete_id', 'event_id', 'declared_record', 'personal_best', 'pr_comment', 'fee'])]
 class EntryItem extends Model
 {
     public function entry(): BelongsTo

@@ -103,3 +103,7 @@ dl.kv dd { margin: 0; }
 .choice-title { font-size: 1.35rem; font-weight: 700; }
 .choice-text { color: var(--muted); flex: 1; }
 .choice .btn { align-self: flex-start; }
+td.slot { min-width: 240px; }
+td.slot .times { display: flex; gap: 6px; margin-top: 6px; }
+td.slot .times input { min-width: 0; width: 50%; }
+td input.pr { min-width: 240px; }

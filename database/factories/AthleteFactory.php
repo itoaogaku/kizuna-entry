@@ -17,10 +17,9 @@ class AthleteFactory extends Factory
             'user_id' => User::factory(),
             'last_name' => fake()->lastName(),
             'first_name' => fake()->firstName(),
-            'last_kana' => 'キズナ',
-            'first_kana' => 'タロウ',
+            'kana' => 'キズナ タロウ',
             'gender' => 'M',
-            'birthdate' => fake()->dateTimeBetween('-40 years', '-13 years')->format('Y-m-d'),
+            'association' => '東京',
             'category' => '一般',
             'is_active' => true,
         ];
@@ -28,6 +27,6 @@ class AthleteFactory extends Factory
 
     public function female(): static
     {
-        return $this->state(fn () => ['gender' => 'F', 'first_kana' => 'ハナコ']);
+        return $this->state(fn () => ['gender' => 'F', 'kana' => 'キズナ ハナコ']);
     }
 }

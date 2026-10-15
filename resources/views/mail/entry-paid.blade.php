@@ -13,7 +13,7 @@
 
 ■ エントリー内容
 @foreach ($entry->items as $item)
-・{{ $item->athlete->fullName() }}（{{ $item->athlete->genderLabel() }}）　{{ $item->event->name }}{{ $item->declared_record ? '　申告記録 '.$item->declared_record : '' }}　{{ number_format($item->fee) }}円
+・{{ $item->athlete->fullName() }}（{{ $item->athlete->genderLabel() }}）　{{ $item->event->name }}{{ $item->declared_record ? '　申請タイム '.$item->declared_record : '' }}　{{ number_format($item->fee) }}円
 @endforeach
 
 エントリー内容はマイページからも確認できます。
