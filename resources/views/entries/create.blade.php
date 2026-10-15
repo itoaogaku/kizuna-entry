@@ -5,8 +5,8 @@
     <h1>{{ $meet->name }} エントリー</h1>
     <p class="muted">
         開催日 {{ $meet->held_on->isoFormat('YYYY年M月D日（ddd）') }}・締切 {{ $meet->entry_closes_at->format('Y/m/d H:i') }}・1人{{ $meet->max_events_per_athlete }}種目まで<br>
-        出場する選手にチェックを入れ、申込み種目と目標タイム（例 14'30）を入力してください。PRしたい一言は任意です。<br>
-        前回の大会で同じ種目に出た選手は、種目を選ぶと前回の目標タイムが自動で入ります。
+        出場する選手にチェックを入れ、申込み種目と申請タイム（例 14'30）を入力してください。PRしたい一言は任意です。<br>
+        前回の大会で同じ種目に出た選手は、種目を選ぶと前回の申請タイムが自動で入ります。
     </p>
 
     @if ($athletes->isEmpty())
@@ -25,7 +25,7 @@
                         <th>性別</th>
                         <th>種別・学年</th>
                         @for ($i = 0; $i < $meet->max_events_per_athlete; $i++)
-                            <th>申込み種目{{ $meet->max_events_per_athlete > 1 ? $i + 1 : '' }}<br><span class="muted">目標タイム</span></th>
+                            <th>申込み種目{{ $meet->max_events_per_athlete > 1 ? $i + 1 : '' }}<br><span class="muted">申請タイム</span></th>
                         @endfor
                         <th>PRしたい一言 <span class="muted">（任意・実況で使用）</span></th>
                     </tr>
@@ -69,7 +69,7 @@
                                     </select>
                                     <div class="times">
                                         <input type="text" name="items[{{ $athlete->id }}][events][{{ $i }}][record]" value="{{ $slot['record'] ?? '' }}"
-                                               placeholder="例 14'30" aria-label="目標タイム" data-record>
+                                               placeholder="例 14'30" aria-label="申請タイム" data-record>
                                     </div>
                                 </td>
                             @endfor
@@ -113,7 +113,7 @@
         document.getElementById('total').textContent = total.toLocaleString('ja-JP');
     };
     form.addEventListener('change', e => {
-        // 種目を選んだら、その選手に自動でチェックを入れ、前回の目標タイムがあれば入れる
+        // 種目を選んだら、その選手に自動でチェックを入れ、前回の申請タイムがあれば入れる
         if (e.target.matches('[data-event]') && e.target.value) {
             const tr = e.target.closest('tr');
             tr.querySelector('[data-select]').checked = true;

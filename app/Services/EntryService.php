@@ -87,12 +87,12 @@ class EntryService
                 }
                 $record = RaceTime::normalize($e['record'] ?? null);
                 if ($record === null) {
-                    $errors[$key] = $athlete->fullName().'：'.$event->name.'の目標タイムを入力してください。';
+                    $errors[$key] = $athlete->fullName().'：'.$event->name.'の申請タイムを入力してください。';
 
                     continue;
                 }
                 if (! RaceTime::isValid($record)) {
-                    $errors[$key] = $athlete->fullName().'：目標タイム「'.$record.'」の形が正しくありません（例：14\'30）。';
+                    $errors[$key] = $athlete->fullName().'：申請タイム「'.$record.'」の形が正しくありません（例：14\'30）。';
 
                     continue;
                 }
@@ -239,7 +239,7 @@ class EntryService
     }
 
     /**
-     * 選手ごとの、過去の大会で入れた目標タイム（種目名ごとに最新のもの）。
+     * 選手ごとの、過去の大会で入れた申請タイム（種目名ごとに最新のもの）。
      * エントリー画面で種目を選んだときに自動で入れ、入力の手間を減らす。
      *
      * @return array<int, array<string, string>>

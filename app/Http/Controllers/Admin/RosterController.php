@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * 全団体・個人の申込を、種目ごとに目標タイム順（同タイムは自己ベスト順）で一覧する。
+ * 全団体・個人の申込を、種目ごとに申請タイム順（同タイムは自己ベスト順）で一覧する。
  */
 class RosterController extends Controller
 {

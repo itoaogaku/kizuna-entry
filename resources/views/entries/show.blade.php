@@ -28,7 +28,7 @@
 
     <div class="table-wrap">
         <table>
-            <thead><tr><th>氏名</th><th>性別</th><th>申込み種目</th><th>目標タイム</th><th>PRしたい一言</th><th class="num">料金</th></tr></thead>
+            <thead><tr><th>氏名</th><th>性別</th><th>申込み種目</th><th>申請タイム</th><th>PRしたい一言</th><th class="num">料金</th></tr></thead>
             <tbody>
             @foreach ($entry->items as $item)
                 <tr>

@@ -6,7 +6,7 @@ use App\Models\EntryItem;
 use Illuminate\Support\Collection;
 
 /**
- * 運営で使う並び順：種目 → 目標タイムの速い順 → （同じ目標タイムなら）自己ベストの速い順 → フリガナ順。
+ * 運営で使う並び順：種目 → 申請タイムの速い順 → （同じ申請タイムなら）自己ベストの速い順 → フリガナ順。
  * 読めないタイム・未入力は後ろに回す。
  */
 class EntryOrder
@@ -27,7 +27,7 @@ class EntryOrder
     }
 
     /**
-     * 同じ種目で目標タイムが同じ選手がいる明細のID（自己ベストで順番が決まる選手）。
+     * 同じ種目で申請タイムが同じ選手がいる明細のID（自己ベストで順番が決まる選手）。
      *
      * @param  Collection<int, EntryItem>  $items
      * @return Collection<int, int>

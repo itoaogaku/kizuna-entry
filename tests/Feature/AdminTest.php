@@ -62,7 +62,7 @@ class AdminTest extends TestCase
         $book = IOFactory::load($path);
         $rows = $book->getSheet(0)->toArray(null, false, false, false);
 
-        $this->assertSame(['No', '団体名', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '申込み種目', '目標タイム', '自己ベスト', '種別', 'PRしたい一言', '料金'], array_slice($rows[0], 0, 14));
+        $this->assertSame(['No', '団体名', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '申込み種目', '申請タイム', '自己ベスト', '種別', 'PRしたい一言', '料金'], array_slice($rows[0], 0, 14));
         $this->assertCount(3, $rows); // 見出し＋入金済み2件（取消は出さない）
         $this->assertSame(['伊藤', "14'30"], [$rows[1][2], $rows[1][9]]); // 申請タイムの速い順
         $this->assertSame([2, '絆AC', '青山', '駿', 'アオヤマ シュン', 2, '男'], array_slice($rows[2], 0, 7));

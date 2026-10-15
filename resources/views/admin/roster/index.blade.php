@@ -34,9 +34,9 @@
     </form>
 
     <p class="muted">
-        全{{ $total }}人（のべ）・並び順：目標タイムの速い順 → 同じ目標タイムは自己ベストの速い順。
+        全{{ $total }}人（のべ）・並び順：申請タイムの速い順 → 同じ申請タイムは自己ベストの速い順。
         @if ($tied->isNotEmpty())
-            <span class="tie-note">黄色の行</span>は目標タイムが同じ選手です。自己ベストを入力すると順番が決まります。
+            <span class="tie-note">黄色の行</span>は申請タイムが同じ選手です。自己ベストを入力すると順番が決まります。
         @endif
     </p>
 
@@ -47,7 +47,7 @@
             <table>
                 <thead>
                 <tr>
-                    <th class="num">順</th><th>目標タイム</th><th>自己ベスト</th><th>氏名</th><th>フリガナ</th>
+                    <th class="num">順</th><th>申請タイム</th><th>自己ベスト</th><th>氏名</th><th>フリガナ</th>
                     <th>団体名・所属</th><th>種別・学年</th><th>性別</th><th>所属陸協</th><th>PRしたい一言</th><th>状態</th>
                 </tr>
                 </thead>
