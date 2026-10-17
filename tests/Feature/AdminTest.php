@@ -116,4 +116,51 @@ class AdminTest extends TestCase
         $this->actingAs($admin)->put(route('admin.roster.best', $item), ['personal_best' => 'はやい'])->assertSessionHasErrors();
         $this->actingAs($team)->put(route('admin.roster.best', $item), ['personal_best' => "13'00"])->assertForbidden();
     }
+
+    public function test_new_meet_form_carries_over_the_latest_meet_and_registers_events_at_once(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $last = Meet::factory()->create(['name' => '第9回 絆記録会', 'venue' => '絆競技場', 'held_on' => '2026-06-01']);
+        Event::factory()->for($last)->create(['name' => '5000m', 'gender' => null, 'fee' => 2200, 'capacity' => 120]);
+
+        $this->actingAs($admin)->get(route('admin.meets.create'))
+            ->assertOk()
+            ->assertSee('value="第10回 絆記録会"', false)
+            ->assertSee('value="絆競技場"', false)
+            ->assertSee('value="5000m"', false)
+            ->assertSee('value="2200"', false);
+
+        $this->actingAs($admin)->post(route('admin.meets.store'), [
+            'name' => '第10回 絆記録会',
+            'held_on' => '2026-12-06',
+            'entry_opens_at' => '2026-10-20T00:00',
+            'entry_closes_at' => '2026-11-20T23:59',
+            'max_events_per_athlete' => 2,
+            'is_published' => '1',
+            'events' => [
+                ['name' => '5000m', 'gender' => '', 'fee' => '2200', 'capacity' => '120'],
+                ['name' => '1500m', 'gender' => '', 'fee' => '2000', 'capacity' => ''],
+                ['name' => '', 'gender' => '', 'fee' => '', 'capacity' => ''],
+            ],
+        ])->assertRedirect();
+
+        $meet = Meet::where('name', '第10回 絆記録会')->sole();
+        $this->assertSame(['5000m', '1500m'], $meet->events->pluck('name')->all());
+        $this->assertNull($meet->events[1]->capacity);
+        $this->assertSame(2000, $meet->events[1]->fee);
+    }
+
+    public function test_new_meet_rejects_events_without_fee(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->post(route('admin.meets.store'), [
+            'name' => '第1回', 'held_on' => '2026-12-06',
+            'entry_opens_at' => '2026-10-20T00:00', 'entry_closes_at' => '2026-11-20T23:59',
+            'max_events_per_athlete' => 2,
+            'events' => [['name' => '5000m', 'fee' => '']],
+        ])->assertSessionHasErrors();
+
+        $this->assertDatabaseCount('meets', 0);
+    }
 }

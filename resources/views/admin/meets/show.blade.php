@@ -30,7 +30,7 @@
 
     <div class="table-wrap">
         <table>
-            <thead><tr><th>順</th><th>種目名</th><th>性別</th><th>参加費（円）</th><th>定員</th><th class="num">申込数</th><th></th></tr></thead>
+            <thead><tr><th>順</th><th>種目名</th><th>性別</th><th>料金（円）</th><th>定員</th><th class="num">申込数</th><th></th></tr></thead>
             <tbody>
             @foreach ($meet->events as $event)
                 <tr>
