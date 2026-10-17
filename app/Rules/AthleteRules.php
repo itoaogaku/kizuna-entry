@@ -16,8 +16,8 @@ class AthleteRules
         return [
             'last_name' => ['required', 'string', 'max:50'],
             'first_name' => ['required', 'string', 'max:50'],
-            'kana' => ['required', 'string', 'max:100', 'regex:/^[ァ-ヶー 　]+$/u'],
-            'grade' => ['nullable', 'integer', 'between:1,6'],
+            'kana' => ['nullable', 'string', 'max:100', 'regex:/^[ァ-ヶー・ 　]+$/u'],
+            'grade' => ['nullable', Rule::in(Athlete::GRADES)],
             'gender' => ['required', Rule::in(array_keys(Athlete::GENDERS))],
             'association' => ['nullable', Rule::in(Athlete::ASSOCIATIONS)],
             'category' => ['nullable', Rule::in(Athlete::CATEGORIES)],
@@ -29,7 +29,7 @@ class AthleteRules
     /**
      * 入力のゆれをそろえる。
      * フリガナ：ひらがな・半角カナ → 全角カタカナ（姓と名の間は半角スペース1つ）
-     * 学年：全角数字 → 半角、所属陸協：「東京陸協」「東京都」→「東京」
+     * 学年：全角 → 半角（M1・M2 などはそのまま）、所属陸協：「東京陸協」「東京都」→「東京」
      */
     public static function normalize(array $input): array
     {
@@ -37,8 +37,11 @@ class AthleteRules
             $kana = mb_convert_kana(trim($input['kana']), 'KVCs');
             $input['kana'] = preg_replace('/\s+/u', ' ', $kana);
         }
-        if (isset($input['grade']) && is_string($input['grade'])) {
-            $input['grade'] = preg_replace('/[^0-9]/', '', mb_convert_kana($input['grade'], 'n')) ?: null;
+        if (isset($input['grade']) && (is_string($input['grade']) || is_int($input['grade']))) {
+            // 「２年」「2」「m1」「Ｍ１」→「2」「M1」
+            $grade = strtoupper(mb_convert_kana(trim((string) $input['grade']), 'as'));
+            $grade = preg_replace('/年$/u', '', $grade);
+            $input['grade'] = preg_match('/^[MD]?\d$/', $grade) ? $grade : ($grade === '' ? null : $grade);
         }
         if (isset($input['association']) && is_string($input['association'])) {
             $input['association'] = self::normalizeAssociation($input['association']);

@@ -22,7 +22,7 @@
                         @php $a = $row['athlete']; @endphp
                         <tr class="{{ $row['graduating'] ? 'tie' : '' }}">
                             <td>{{ $a->fullName() }}<br><span class="muted">{{ $a->kana }}</span></td>
-                            <td>{{ $a->category }} {{ $a->grade }}年</td>
+                            <td>{{ $a->category }} {{ $a->gradeLabel() }}</td>
                             <td>
                                 @if ($row['graduating'])
                                     <select name="choices[{{ $a->id }}]" aria-label="{{ $a->fullName() }}の扱い">

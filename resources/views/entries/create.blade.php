@@ -69,7 +69,7 @@
                                 @endif
                             </td>
                             <td>{{ $athlete->genderLabel() }}</td>
-                            <td>{{ $athlete->category }}{{ $athlete->grade ? ' '.$athlete->grade.'年' : '' }}</td>
+                            <td>{{ $athlete->category }}{{ $athlete->grade ? ' '.$athlete->gradeLabel() : '' }}</td>
                             @for ($i = 0; $i < $meet->max_events_per_athlete; $i++)
                                 @php $slot = $row['events'][$i] ?? []; @endphp
                                 <td class="slot">

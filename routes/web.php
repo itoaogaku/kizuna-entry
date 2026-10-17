@@ -97,6 +97,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/meets/{meet}/roster', [Admin\RosterController::class, 'index'])->name('roster.index');
     Route::put('/entry-items/{item}/best', [Admin\RosterController::class, 'updateBest'])->name('roster.best');
     Route::get('/meets/{meet}/documents', [Admin\DocumentController::class, 'edit'])->name('documents.edit');
+    Route::get('/meets/{meet}/program.xlsx', [Admin\DocumentController::class, 'programWorkbook'])->name('documents.program');
     Route::post('/meets/{meet}/documents', [Admin\DocumentController::class, 'update'])->name('documents.update');
     Route::get('/meets/{meet}/press', [Admin\PressController::class, 'index'])->name('press.index');
     Route::get('/teams', [Admin\TeamController::class, 'index'])->name('teams.index');

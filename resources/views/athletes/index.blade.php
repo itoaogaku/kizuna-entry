@@ -33,7 +33,7 @@
                         <td>{{ $athlete->kana }}</td>
                         <td>{{ $athlete->genderLabel() }}</td>
                         <td>{{ $athlete->category }}</td>
-                        <td>{{ $athlete->grade ? $athlete->grade.'年' : '' }}</td>
+                        <td>{{ $athlete->gradeLabel() }}</td>
                         <td>{{ $athlete->association }}</td>
                         <td><a href="{{ route('athletes.edit', $athlete) }}">編集</a></td>
                     </tr>

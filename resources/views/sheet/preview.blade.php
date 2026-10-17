@@ -25,7 +25,7 @@
                     <td>{{ $a['last_name'] }} {{ $a['first_name'] }}</td>
                     <td>{{ $a['kana'] }}</td>
                     <td>{{ \App\Models\Athlete::GENDERS[$a['gender']] ?? $a['gender'] }}</td>
-                    <td>{{ $a['category'] }}{{ $a['grade'] ? ' '.$a['grade'].'年' : '' }}</td>
+                    <td>{{ $a['category'] }}{{ $a['grade'] ? ' '.\App\Models\Athlete::formatGrade((string) $a['grade']) : '' }}</td>
                     <td>{{ $a['association'] }}</td>
                     <td>{{ $row['event']?->name ?? $row['eventName'] }}</td>
                     <td>{{ $row['record'] }}</td>

@@ -24,6 +24,13 @@ class AthleteTest extends TestCase
             'grade' => '3', 'gender' => 'M', 'association' => '東京', 'category' => '高校生',
         ])->assertRedirect(route('athletes.index'));
 
+        // 大学院生・学連登録・フリガナなし（外国籍の選手など）も登録できる
+        $this->actingAs($user)->post('/athletes', [
+            'last_name' => 'Bryan', 'first_name' => 'Ong', 'kana' => '',
+            'grade' => 'ｍ１', 'gender' => 'M', 'association' => '学連', 'category' => '大学生',
+        ])->assertRedirect(route('athletes.index'));
+        $this->assertDatabaseHas('athletes', ['last_name' => 'Bryan', 'kana' => null, 'grade' => 'M1', 'association' => '学連']);
+
         $this->assertDatabaseHas('athletes', [
             'user_id' => $user->id, 'kana' => 'スズキ タロウ', 'grade' => 3, 'association' => '東京', 'category' => '高校生', 'birthdate' => null,
         ]);

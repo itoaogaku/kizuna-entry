@@ -17,8 +17,12 @@ class Athlete extends Model
     /** エントリーシートの「種別」 */
     public const CATEGORIES = ['中学生', '高校生', '大学生', '一般'];
 
-    /** 所属陸協（都道府県陸上競技協会） */
+    /** 学年（大学院は M1・M2・D1〜D3） */
+    public const GRADES = ['1', '2', '3', '4', '5', '6', 'M1', 'M2', 'D1', 'D2', 'D3'];
+
+    /** 所属陸協（都道府県陸上競技協会。学生は「学連」で登録している場合がある） */
     public const ASSOCIATIONS = [
+        '学連',
         '北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島',
         '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川',
         '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜', '静岡', '愛知',
@@ -32,7 +36,7 @@ class Athlete extends Model
     {
         return [
             'birthdate' => 'date',
-            'grade' => 'integer',
+            'grade' => 'string',
             'is_active' => 'boolean',
         ];
     }
@@ -53,6 +57,21 @@ class Athlete extends Model
     public function divisionLabel(): string
     {
         return Meet::divisionOf($this->category) === 'junior' ? '中学生の部' : '高校・大学・一般の部';
+    }
+
+    /** 例：「2年」「M1」 */
+    public function gradeLabel(): string
+    {
+        return self::formatGrade($this->grade);
+    }
+
+    public static function formatGrade(?string $grade): string
+    {
+        if ($grade === null || $grade === '') {
+            return '';
+        }
+
+        return ctype_digit($grade) ? $grade.'年' : $grade;
     }
 
     public function genderLabel(): string

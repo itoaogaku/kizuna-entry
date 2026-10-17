@@ -14,8 +14,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('last_name'); // 姓
             $table->string('first_name'); // 名
-            $table->string('kana'); // フリガナ（全角カタカナ。例：スズキ タロウ）
-            $table->unsignedTinyInteger('grade')->nullable(); // 学年（学生の場合）
+            $table->string('kana')->nullable(); // フリガナ（全角カタカナ。例：スズキ タロウ。外国籍の選手などは空欄可）
+            $table->string('grade', 4)->nullable(); // 学年（学生の場合。1〜6、大学院は M1・M2・D1〜D3）
             $table->string('gender', 1); // M / F
             $table->string('association')->nullable(); // 所属陸協（例：東京）
             $table->string('category')->nullable(); // 種別（中学生・高校生・大学生・一般）

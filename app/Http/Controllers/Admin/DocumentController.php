@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Meet;
+use App\Services\ProgramWorkbook;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * 大会資料（PDF）：大会要項・タイムテーブル・組編成・大会プログラム・リザルトを貼る。
@@ -57,5 +60,17 @@ class DocumentController extends Controller
 
         return redirect()->route('admin.documents.edit', $meet)
             ->with('status', $changed ? implode('・', $changed).'を更新しました。大会開催ページに反映されています。' : '保存しました。');
+    }
+
+    /**
+     * プログラム用Excel（競技日程＋組分け案つきのスタートリスト）。
+     */
+    public function programWorkbook(Meet $meet, ProgramWorkbook $workbook): StreamedResponse
+    {
+        $book = $workbook->build($meet);
+
+        return response()->streamDownload(fn () => (new Xlsx($book))->save('php://output'),
+            $meet->held_on->format('Ymd').'_プログラム用.xlsx',
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
 }

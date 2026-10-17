@@ -65,7 +65,7 @@ class AdminTest extends TestCase
         $this->assertSame(['No', '団体名', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '申込み種目', '申請タイム', '自己ベスト', '種別', 'PRしたい一言', '料金'], array_slice($rows[0], 0, 14));
         $this->assertCount(3, $rows); // 見出し＋入金済み2件（取消は出さない）
         $this->assertSame(['伊藤', "14'30"], [$rows[1][2], $rows[1][9]]); // 申請タイムの速い順
-        $this->assertSame([2, '絆AC', '青山', '駿', 'アオヤマ シュン', 2, '男'], array_slice($rows[2], 0, 7));
+        $this->assertSame([2, '絆AC', '青山', '駿', 'アオヤマ シュン', '2', '男'], array_slice($rows[2], 0, 7));
         $this->assertSame('=CMD()', $book->getSheet(0)->getCell('E2')->getValue()); // 数式にしない
         $this->assertSame('5000m', $book->getSheet(1)->getTitle()); // 種目ごとのシート
     }

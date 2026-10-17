@@ -8,8 +8,9 @@
     <div class="card workflow">
         <strong>タイムテーブル・組編成・大会プログラムの作り方</strong>
         <ol>
-            <li><a href="{{ route('admin.entries.export', ['meet' => $meet, 'status' => 'paid']) }}">エントリーデータをExcelで出力</a>する（入金済み。種目ごとのシートは申請タイム順、部門つき）</li>
-            <li>Excelで組編成・タイムテーブルを微調整する</li>
+            <li><a href="{{ route('admin.documents.program', $meet) }}"><strong>プログラム用Excel</strong></a>を出力する（入金済みの選手で組分け案を作った、大会プログラムと同じ形のスタートリストと競技日程）
+                <br><span class="muted">エントリーシートと同じ列の一覧が必要なときは <a href="{{ route('admin.entries.export', ['meet' => $meet, 'status' => 'paid']) }}">エントリーデータをExcelで出力</a></span></li>
+            <li>Excelで組・ORD・競技時刻を微調整する（競技時刻を入れると招集時刻は自動で入ります。右側の灰色の列は調整用で印刷されません）</li>
             <li>PDFに保存して、下の欄に貼る</li>
         </ol>
         <p class="muted">リザルトは、写真判定機から出力したPDFをそのまま貼ってください。PDFを貼ると、すぐに大会開催ページにボタンが表示されます。</p>

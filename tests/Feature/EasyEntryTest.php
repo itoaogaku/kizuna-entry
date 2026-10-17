@@ -52,6 +52,8 @@ class EasyEntryTest extends TestCase
         $graduatePromote = Athlete::factory()->for($team)->create(['category' => '高校生', 'grade' => 3]);
         $senior = Athlete::factory()->for($team)->create(['category' => '大学生', 'grade' => 4]);
         $adult = Athlete::factory()->for($team)->create(['category' => '一般', 'grade' => null]);
+        $master = Athlete::factory()->for($team)->create(['category' => '大学生', 'grade' => 'M1']);
+        $masterDone = Athlete::factory()->for($team)->create(['category' => '大学生', 'grade' => 'M2']);
 
         $this->actingAs($team)->get('/entry')->assertSee('新年度になりました');
         $this->actingAs($team)->get(route('athletes.advance'))->assertOk()->assertSee('高校生 3年');
@@ -62,16 +64,18 @@ class EasyEntryTest extends TestCase
             $senior->id => 'promote',
         ]])->assertRedirect(route('athletes.index'));
 
-        $this->assertSame(3, $second->fresh()->grade);
+        $this->assertSame('3', $second->fresh()->grade);
         $this->assertFalse($graduateRetire->fresh()->is_active);
-        $this->assertSame(['大学生', 1], [$graduatePromote->fresh()->category, $graduatePromote->fresh()->grade]);
+        $this->assertSame(['大学生', '1'], [$graduatePromote->fresh()->category, $graduatePromote->fresh()->grade]);
         $this->assertSame(['一般', null], [$senior->fresh()->category, $senior->fresh()->grade]);
         $this->assertNull($adult->fresh()->grade);
+        $this->assertSame('M2', $master->fresh()->grade);
+        $this->assertFalse($masterDone->fresh()->is_active); // 修了（選択なしは対象外）
         $this->assertSame(2027, $team->fresh()->grades_updated_year);
 
         // 同じ年度に2回押しても、確認なしでは学年は上がらない
         $this->actingAs($team)->post(route('athletes.advance'))->assertSessionHasErrors('again');
-        $this->assertSame(3, $second->fresh()->grade);
+        $this->assertSame('3', $second->fresh()->grade);
         $this->actingAs($team)->get('/entry')->assertDontSee('新年度になりました');
     }
 }

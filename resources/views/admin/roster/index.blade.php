@@ -68,7 +68,7 @@
                         <td>{{ $item->entry->user->isIndividual() ? ($item->entry->user->team_name ?: '個人') : $item->entry->user->displayName() }}
                             @if ($item->entry->isFromSheet())<span class="badge" title="エクセル添付で申込み">Excel</span>@endif
                         </td>
-                        <td>{{ $item->athlete->category }}{{ $item->athlete->grade ? ' '.$item->athlete->grade.'年' : '' }}</td>
+                        <td>{{ $item->athlete->category }}{{ $item->athlete->grade ? ' '.$item->athlete->gradeLabel() : '' }}</td>
                         <td>{{ $item->athlete->divisionLabel() }}</td>
                         <td>{{ $item->athlete->genderLabel() }}</td>
                         <td>{{ $item->athlete->association }}</td>

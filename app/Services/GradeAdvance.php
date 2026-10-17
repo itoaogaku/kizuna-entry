@@ -50,9 +50,32 @@ class GradeAdvance
 
     public static function isGraduating(Athlete $athlete): bool
     {
+        $grade = (string) $athlete->grade;
+        if ($grade === '') {
+            return false;
+        }
+        // 大学院：修士2年・博士3年で修了
+        if (in_array($grade, ['M2', 'D3'], true)) {
+            return true;
+        }
+        if (! ctype_digit($grade)) {
+            return false;
+        }
         $last = self::LAST_GRADE[$athlete->category] ?? null;
 
-        return $athlete->grade !== null && $last !== null && $athlete->grade >= $last;
+        return $last !== null && (int) $grade >= $last;
+    }
+
+    /**
+     * 1つ上の学年（「2」→「3」、「M1」→「M2」）。
+     */
+    public static function nextGrade(string $grade): string
+    {
+        if (preg_match('/^([MD])(\d)$/', $grade, $m)) {
+            return $m[1].((int) $m[2] + 1);
+        }
+
+        return (string) min(6, (int) $grade + 1);
     }
 
     /**
@@ -68,8 +91,8 @@ class GradeAdvance
             ->map(fn (Athlete $a) => [
                 'athlete' => $a,
                 'graduating' => self::isGraduating($a),
-                'after' => self::isGraduating($a) ? '' : $a->category.' '.($a->grade + 1).'年',
-                'promoteLabel' => self::promoted($a)['category'].(self::promoted($a)['grade'] ? ' '.self::promoted($a)['grade'].'年' : ''),
+                'after' => self::isGraduating($a) ? '' : $a->category.' '.Athlete::formatGrade(self::nextGrade((string) $a->grade)),
+                'promoteLabel' => self::promoted($a)['category'].(self::promoted($a)['grade'] ? ' '.Athlete::formatGrade(self::promoted($a)['grade']) : ''),
             ]);
     }
 
@@ -84,7 +107,7 @@ class GradeAdvance
         DB::transaction(function () use ($user, $choices, &$result) {
             foreach ($user->athletes()->where('is_active', true)->whereNotNull('grade')->get() as $athlete) {
                 if (! self::isGraduating($athlete)) {
-                    $athlete->update(['grade' => min(6, $athlete->grade + 1)]);
+                    $athlete->update(['grade' => self::nextGrade((string) $athlete->grade)]);
                     $result['advanced']++;
 
                     continue;
@@ -102,12 +125,17 @@ class GradeAdvance
     }
 
     /**
-     * @return array{category: string, grade: ?int}
+     * 卒業後に進学して続ける場合の種別・学年（大学院修了・大学卒業は一般）。
+     *
+     * @return array{category: string, grade: ?string}
      */
     private static function promoted(Athlete $athlete): array
     {
+        if (in_array((string) $athlete->grade, ['M2', 'D3'], true)) {
+            return ['category' => '一般', 'grade' => null];
+        }
         $next = self::NEXT_CATEGORY[$athlete->category] ?? $athlete->category;
 
-        return ['category' => $next, 'grade' => $next === '一般' ? null : 1];
+        return ['category' => $next, 'grade' => $next === '一般' ? null : '1'];
     }
 }
