@@ -15,6 +15,7 @@
             <a class="btn secondary" href="{{ route('admin.meets.edit', $meet) }}">大会情報を編集</a>
             <a class="btn" href="{{ route('admin.roster.index', $meet) }}">申込一覧（申請タイム順）</a>
             <a class="btn secondary" href="{{ route('admin.entries.index', $meet) }}">申込・入金状況</a>
+            <a class="btn secondary" href="{{ route('admin.program.show', $meet) }}">プログラム作成（タイムテーブル・スタートリスト）</a>
         </div>
     </div>
 

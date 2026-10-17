@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
     'name', 'held_on', 'venue', 'entry_opens_at', 'entry_closes_at', 'max_events_per_athlete', 'is_published', 'notes',
     'division', 'eligible', 'outline_url', 'outline_path', 'program_url', 'program_path', 'program_note',
     'result_url', 'result_path', 'photo_url', 'press_url',
+    'start_list_status', 'start_list_published_at', 'program_notes',
 ])]
 class Meet extends Model
 {
@@ -28,6 +29,7 @@ class Meet extends Model
             'entry_opens_at' => 'datetime',
             'entry_closes_at' => 'datetime',
             'is_published' => 'boolean',
+            'start_list_published_at' => 'datetime',
         ];
     }
 
@@ -39,6 +41,40 @@ class Meet extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(Entry::class);
+    }
+
+    public const START_LIST_NONE = 'none';
+
+    public const START_LIST_PROVISIONAL = 'provisional';
+
+    public const START_LIST_FINAL = 'final';
+
+    public function races(): HasMany
+    {
+        return $this->hasMany(Race::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function pressRequests(): HasMany
+    {
+        return $this->hasMany(PressRequest::class)->latest();
+    }
+
+    /** タイムテーブル・スタートリストを公開しているか（暫定版を含む） */
+    public function hasPublicStartList(): bool
+    {
+        return in_array($this->start_list_status, [self::START_LIST_PROVISIONAL, self::START_LIST_FINAL], true);
+    }
+
+    /** タイムテーブル・スタートリストが確定し、プログラムが完成しているか */
+    public function isProgramFinal(): bool
+    {
+        return $this->start_list_status === self::START_LIST_FINAL;
+    }
+
+    /** 取材・撮影のお申込みをこのシステムのフォームで受け付けるか（外部URLがなく、大会前） */
+    public function acceptsPressRequests(): bool
+    {
+        return ! $this->press_url && $this->stage() !== 'finished';
     }
 
     public function isAcceptingEntries(): bool

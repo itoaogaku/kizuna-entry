@@ -259,7 +259,7 @@ ol.steps li { margin-bottom: 6px; }
 .link-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 14px; }
 .link-btn {
   display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 56px; padding: 10px 14px; text-align: center;
-  background: var(--brand); color: #fff; text-decoration: none; font-weight: 700; letter-spacing: .06em; border-radius: 10px;
+  background: var(--brand); color: #fff; text-decoration: none; font-weight: 700; letter-spacing: .03em; border-radius: 10px;
   transition: filter .15s, transform .15s;
 }
 .link-btn small { font-weight: 500; font-size: .75rem; opacity: .9; letter-spacing: 0; }
@@ -289,3 +289,43 @@ ol.steps li { margin-bottom: 6px; }
 .year-links .y { font-family: "Oswald", sans-serif; font-size: 1.6rem; color: var(--brand); line-height: 1; }
 .year-links .t { font-size: .85rem; }
 .site-footer .brand img { background: #fff; border-radius: 8px; padding: 4px; width: 44px; }
+
+/* ===== プログラム作成 ===== */
+.program-status { display: grid; gap: 10px; }
+.program-status strong { font-size: 1.15rem; }
+.status-none { color: var(--muted); }
+.status-provisional { color: #9a6b00; }
+.status-final { color: var(--success-ink); }
+.flow { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0; }
+.flow li { padding: 4px 12px; border-radius: 99px; background: #eef1f2; color: var(--muted); font-size: .85rem; }
+.flow li.done { background: var(--brand-soft); color: var(--brand-ink); font-weight: 700; }
+.race-title { margin: 28px 0 8px; color: var(--brand-ink); }
+.heat-table { margin-bottom: 12px; }
+tr.withdrawn td { color: var(--muted); text-decoration: line-through; }
+input[type=time] { padding: 6px 8px; font: inherit; border: 1px solid var(--border); border-radius: 6px; }
+
+/* ===== タイムテーブル・スタートリスト・プログラム ===== */
+.doc-head h1 { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.timetable td.time { font-family: "Oswald", sans-serif; font-size: 1.1rem; color: var(--brand-ink); }
+.race-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 16px; }
+.race-nav a { padding: 4px 12px; border-radius: 99px; background: #fff; border: 1px solid var(--border); text-decoration: none; color: var(--brand-ink); font-size: .9rem; }
+.sl-race h2 { color: var(--brand-ink); border-left: 6px solid var(--brand); padding-left: 10px; }
+.sl-heat { margin-bottom: 14px; }
+.sl-heat th.heat-head { background: var(--brand-deep); color: #fff; font-size: 1rem; }
+.sl-heat th.heat-head span { font-family: "Oswald", sans-serif; margin-left: 10px; font-weight: 500; }
+.sl-heat td.name { font-weight: 700; }
+.sl-heat td.kana { color: var(--muted); font-size: .85rem; }
+.program-cover { display: flex; gap: 16px; align-items: center; padding: 20px; border-radius: 14px; background: #fff; border: 1px solid var(--border); border-top: 6px solid var(--brand); margin-bottom: 20px; }
+.program-cover h1 { margin: 0; }
+.program-cover p { margin: 2px 0; }
+.program-notes p { white-space: pre-line; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+@media print {
+  header.site, .site-footer, .no-print, .race-nav, .flash { display: none !important; }
+  body { background: #fff; font-size: 11px; }
+  main { padding: 0; max-width: none; }
+  .table-wrap { border: 0; overflow: visible; }
+  th, td { padding: 3px 6px; }
+  .sl-heat { break-inside: avoid; }
+  .page-break { break-before: page; }
+  .program-cover { border: 1px solid #999; }
+}

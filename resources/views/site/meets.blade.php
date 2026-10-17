@@ -106,13 +106,22 @@
                         @foreach (\App\Models\Meet::DOCUMENTS as $key => $label)
                             @if ($url = $meet->documentUrl($key))
                                 <a class="link-btn" href="{{ $url }}" target="_blank" rel="noopener">{{ $label }}@if ($key === 'program' && $meet->program_note)<small>{{ $meet->program_note }}</small>@endif</a>
+                            @elseif ($key === 'program' && $meet->isProgramFinal())
+                                {{-- PDFがなければ、確定したタイムテーブルとスタートリストから作ったプログラムを出す --}}
+                                <a class="link-btn" href="{{ route('site.program', $meet) }}">大会プログラム<small>{{ $meet->start_list_published_at?->format('md') }}更新</small></a>
+                            @endif
+                            @if ($key === 'outline' && $meet->hasPublicStartList())
+                                <a class="link-btn" href="{{ route('site.timetable', $meet) }}">タイムテーブル@unless ($meet->isProgramFinal())<small>暫定版</small>@endunless</a>
+                                <a class="link-btn" href="{{ route('site.startlist', $meet) }}">スタートリスト@unless ($meet->isProgramFinal())<small>暫定版</small>@endunless</a>
                             @endif
                         @endforeach
                         @if ($meet->photo_url)
                             <a class="link-btn photo" href="{{ $meet->photo_url }}" target="_blank" rel="noopener">写真館</a>
                         @endif
-                        @if ($meet->press_url)
+                        @if ($meet->press_url && $meet->stage() !== 'finished')
                             <a class="link-btn outline" href="{{ $meet->press_url }}" target="_blank" rel="noopener">取材・撮影のお申込み</a>
+                        @elseif ($meet->acceptsPressRequests())
+                            <a class="link-btn outline" href="{{ route('press.create', $meet) }}">取材・撮影のお申込み</a>
                         @endif
                     </div>
                     @if ($meet->notes)

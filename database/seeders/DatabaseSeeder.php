@@ -80,7 +80,6 @@ class DatabaseSeeder extends Seeder
             'held_on' => now()->addMonth()->toDateString(),
             'eligible' => '中学生・高校生・大学生・一般',
             'outline_url' => $site,
-            'press_url' => $site,
             'notes' => "料金は1種目ごとにかかります。お支払い後の返金はできません。\n組変更希望は、暫定版スタートリスト掲載後に組変更希望用紙で受け付けます。",
         ]);
         $events = [

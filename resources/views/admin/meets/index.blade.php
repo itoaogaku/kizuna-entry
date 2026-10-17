@@ -19,7 +19,7 @@
                     <td>{{ $meet->is_published ? '公開' : '非公開' }}</td>
                     <td class="num">{{ $meet->paid_count }}件</td>
                     <td class="num">{{ number_format($meet->paid_total ?? 0) }}円</td>
-                    <td><a href="{{ route('admin.roster.index', $meet) }}">申込一覧</a>　<a href="{{ route('admin.entries.index', $meet) }}">入金状況</a></td>
+                    <td><a href="{{ route('admin.roster.index', $meet) }}">申込一覧</a>　<a href="{{ route('admin.entries.index', $meet) }}">入金状況</a>　<a href="{{ route('admin.program.show', $meet) }}">プログラム</a></td>
                 </tr>
             @empty
                 <tr><td colspan="7">大会がありません。</td></tr>
