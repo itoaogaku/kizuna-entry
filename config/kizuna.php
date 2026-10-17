@@ -13,9 +13,11 @@ return [
 
     // 領収書（入金が完了したら自動で発行し、入金完了メールに添付する）
     'receipt' => [
-        'issuer' => env('KIZUNA_RECEIPT_ISSUER', 'アスリートキャリアセンター絆ランニング倶楽部'),
-        // 適格請求書発行事業者の登録番号（例：T1234567890123）。入れると領収書に登録番号と消費税額（10%・内税）を載せる
-        'registration_number' => env('KIZUNA_INVOICE_NUMBER'),
+        'issuer' => env('KIZUNA_RECEIPT_ISSUER', '株式会社アスリートキャリアセンター'),
+        // 適格請求書発行事業者の登録番号。領収書に登録番号と消費税額（10%・内税）を載せる（空にすると載せない）
+        'registration_number' => env('KIZUNA_INVOICE_NUMBER', 'T6012301013979'),
+        'address' => env('KIZUNA_RECEIPT_ADDRESS', '〒194-0021　東京都町田市中町3-9-12-509'),
+        'phone' => env('KIZUNA_RECEIPT_PHONE', '042-722-2930'),
         'tax_rate' => 10,
     ],
 

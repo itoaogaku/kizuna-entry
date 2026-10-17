@@ -67,6 +67,8 @@ class ReceiptTest extends TestCase
             return count($attachments) === 1 && $attachments[0]->as === $entry->receiptFilename();
         });
 
+        $this->assertSame('株式会社アスリートキャリアセンター', config('kizuna.receipt.issuer'));
+        $this->assertSame('T6012301013979', config('kizuna.receipt.registration_number'));
         $pdf = app(ReceiptPdf::class)->render($entry);
         $this->assertStringStartsWith('%PDF', $pdf);
         $this->assertGreaterThan(5000, strlen($pdf)); // 日本語フォントを埋め込んでいる

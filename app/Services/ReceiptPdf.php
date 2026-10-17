@@ -13,7 +13,6 @@ class ReceiptPdf
     public function render(Entry $entry): string
     {
         $entry->loadMissing('meet', 'user', 'items.athlete', 'items.event');
-        $org = config('kizuna.organization');
         $receipt = config('kizuna.receipt');
 
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8');
@@ -59,7 +58,7 @@ class ReceiptPdf
         if ($receipt['registration_number']) {
             $tax = (int) floor($entry->total_amount * $receipt['tax_rate'] / (100 + $receipt['tax_rate']));
             $pdf->SetFont('notosansjp', '', 9);
-            $pdf->Cell(0, 6, '（内消費税等 '.$receipt['tax_rate'].'%対象 ¥'.number_format($entry->total_amount).'　消費税 ¥'.number_format($tax).'）', 0, 1, 'L');
+            $pdf->Cell(0, 6, '（内訳　'.$receipt['tax_rate'].'%対象 ¥'.number_format($entry->total_amount).'（税込）　うち消費税等 ¥'.number_format($tax).'）', 0, 1, 'L');
         }
         $pdf->Ln(4);
 
@@ -96,9 +95,9 @@ class ReceiptPdf
         $pdf->Cell(0, 6, $receipt['issuer'], 0, 1, 'L');
         $pdf->SetFont('notosansjp', '', 9);
         foreach (array_filter([
-            '〒'.$org['postal_code'].'　'.$org['address'],
-            'Fax：'.$org['fax'].'　'.$org['email'],
             $receipt['registration_number'] ? '登録番号：'.$receipt['registration_number'] : null,
+            $receipt['address'],
+            $receipt['phone'],
         ]) as $line) {
             $pdf->SetX($x);
             $pdf->Cell(0, 5, $line, 0, 1, 'L');
