@@ -13,15 +13,28 @@ use Illuminate\Support\Facades\Storage;
     'name', 'held_on', 'venue', 'entry_opens_at', 'entry_closes_at', 'max_events_per_athlete', 'is_published', 'notes',
     'division', 'eligible', 'outline_url', 'outline_path', 'program_url', 'program_path', 'program_note',
     'result_url', 'result_path', 'photo_url', 'press_url',
-    'start_list_status', 'start_list_published_at', 'program_notes',
+    'outline_note', 'timetable_url', 'timetable_path', 'timetable_note', 'startlist_url', 'startlist_path', 'startlist_note', 'result_note',
     'start_time', 'fee_junior_high', 'fee_student', 'fee_general',
 ])]
 class Meet extends Model
 {
     use HasFactory;
 
-    /** 大会開催ページの資料（PDFのアップロードかURL） */
-    public const DOCUMENTS = ['outline' => '大会要項', 'program' => '大会プログラム', 'result' => 'リザルト'];
+    /**
+     * 大会開催ページの資料（PDFのアップロードかURL）。この順でボタンを並べる。
+     * タイムテーブル・組編成・プログラムは、エントリーデータをExcelで出力・調整して作ったPDFを貼る。
+     * リザルトは写真判定機から出力したPDFを貼る。
+     */
+    public const DOCUMENTS = [
+        'outline' => '大会要項',
+        'timetable' => 'タイムテーブル',
+        'startlist' => '組編成（スタートリスト）',
+        'program' => '大会プログラム',
+        'result' => 'リザルト',
+    ];
+
+    /** 大会開催ページのボタンに出す短い名前 */
+    public const DOCUMENT_BUTTONS = ['startlist' => 'スタートリスト'];
 
     protected function casts(): array
     {
@@ -30,7 +43,6 @@ class Meet extends Model
             'entry_opens_at' => 'datetime',
             'entry_closes_at' => 'datetime',
             'is_published' => 'boolean',
-            'start_list_published_at' => 'datetime',
         ];
     }
 
@@ -43,12 +55,6 @@ class Meet extends Model
     {
         return $this->hasMany(Entry::class);
     }
-
-    public const START_LIST_NONE = 'none';
-
-    public const START_LIST_PROVISIONAL = 'provisional';
-
-    public const START_LIST_FINAL = 'final';
 
     /** 区分別の参加料の表示名 */
     public const FEE_LABELS = ['fee_junior_high' => '中学生', 'fee_student' => '高校生・大学生', 'fee_general' => '一般・実業団'];
@@ -80,7 +86,7 @@ class Meet extends Model
 
     /**
      * 部門：中学生は「中学生の部」、それ以外は「高校生・大学生・一般の部」。
-     * レースは一緒に走り（組分けは種目×性別）、表彰を部門ごとに行う。
+     * レースは一緒に走り（組は種目×性別）、表彰を部門ごとに行う。
      */
     public static function divisionOf(?string $category): string
     {
@@ -89,34 +95,14 @@ class Meet extends Model
 
     public const DIVISION_LABELS = ['junior' => '中学生の部', 'open' => '高校生・大学生・一般の部'];
 
-    /** スタートリストなどに出す短い表記 */
-    public const DIVISION_SHORT = ['junior' => '中学', 'open' => '一般'];
-
     public function startTimeLabel(): ?string
     {
         return $this->start_time ? ltrim(substr($this->start_time, 0, 5), '0') : null;
     }
 
-    public function races(): HasMany
-    {
-        return $this->hasMany(Race::class)->orderBy('sort_order')->orderBy('id');
-    }
-
     public function pressRequests(): HasMany
     {
         return $this->hasMany(PressRequest::class)->latest();
-    }
-
-    /** タイムテーブル・スタートリストを公開しているか（暫定版を含む） */
-    public function hasPublicStartList(): bool
-    {
-        return in_array($this->start_list_status, [self::START_LIST_PROVISIONAL, self::START_LIST_FINAL], true);
-    }
-
-    /** タイムテーブル・スタートリストが確定し、プログラムが完成しているか */
-    public function isProgramFinal(): bool
-    {
-        return $this->start_list_status === self::START_LIST_FINAL;
     }
 
     /** 取材・撮影のお申込みをこのシステムのフォームで受け付けるか（外部URLがなく、大会前） */
@@ -159,6 +145,14 @@ class Meet extends Model
         }
 
         return $this->{$key.'_url'} ?: null;
+    }
+
+    /**
+     * 資料ボタンに添えるメモ（例：0628更新、暫定版）。
+     */
+    public function documentNote(string $key): ?string
+    {
+        return $this->{$key.'_note'} ?: null;
     }
 
     /**

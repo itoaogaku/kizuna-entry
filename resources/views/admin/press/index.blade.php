@@ -4,7 +4,7 @@
 @section('content')
     <h1>{{ $meet->name }} 取材・撮影のお申込み</h1>
     @include('admin.nav')
-    <p><a href="{{ route('admin.program.show', $meet) }}">← プログラム作成に戻る</a></p>
+    <p><a href="{{ route('admin.meets.show', $meet) }}">← 大会の画面に戻る</a></p>
     <div class="table-wrap">
         <table>
             <thead><tr><th>受付日時</th><th>媒体名・会社名</th><th>担当者</th><th>連絡先</th><th>内容</th><th class="num">人数</th><th>掲載・使用予定／備考</th></tr></thead>

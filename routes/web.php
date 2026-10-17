@@ -17,9 +17,6 @@ use Illuminate\Support\Facades\Route;
 
 // 公開サイト：大会開催
 Route::get('/', [SiteController::class, 'meets'])->name('site.meets');
-Route::get('/meets/{meet}/timetable', [SiteController::class, 'timetable'])->name('site.timetable');
-Route::get('/meets/{meet}/startlist', [SiteController::class, 'startList'])->name('site.startlist');
-Route::get('/meets/{meet}/program', [SiteController::class, 'program'])->name('site.program');
 Route::get('/meets/{meet}/press', [PressController::class, 'create'])->name('press.create');
 Route::post('/meets/{meet}/press', [PressController::class, 'store'])->middleware('throttle:10,1')->name('press.store');
 
@@ -95,12 +92,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/meets/{meet}/entries.xlsx', [Admin\EntryController::class, 'export'])->name('entries.export');
     Route::get('/meets/{meet}/roster', [Admin\RosterController::class, 'index'])->name('roster.index');
     Route::put('/entry-items/{item}/best', [Admin\RosterController::class, 'updateBest'])->name('roster.best');
-    Route::get('/meets/{meet}/program', [Admin\ProgramController::class, 'show'])->name('program.show');
-    Route::put('/meets/{meet}/program/races', [Admin\ProgramController::class, 'updateRaces'])->name('program.races');
-    Route::post('/meets/{meet}/program/generate', [Admin\ProgramController::class, 'generate'])->name('program.generate');
-    Route::put('/meets/{meet}/program/heats', [Admin\ProgramController::class, 'moveHeats'])->name('program.heats');
-    Route::put('/meets/{meet}/program/status', [Admin\ProgramController::class, 'status'])->name('program.status');
-    Route::get('/meets/{meet}/startlist.xlsx', [Admin\ProgramController::class, 'export'])->name('program.export');
+    Route::get('/meets/{meet}/documents', [Admin\DocumentController::class, 'edit'])->name('documents.edit');
+    Route::post('/meets/{meet}/documents', [Admin\DocumentController::class, 'update'])->name('documents.update');
     Route::get('/meets/{meet}/press', [Admin\PressController::class, 'index'])->name('press.index');
     Route::get('/teams', [Admin\TeamController::class, 'index'])->name('teams.index');
 });

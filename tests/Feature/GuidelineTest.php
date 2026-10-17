@@ -6,11 +6,11 @@ use App\Models\Athlete;
 use App\Models\Entry;
 use App\Models\Event;
 use App\Models\Meet;
-use App\Models\Race;
 use App\Models\User;
 use App\Payments\FakePaymentGateway;
 use App\Payments\PaymentGateways;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 /**
@@ -67,29 +67,24 @@ class GuidelineTest extends TestCase
         $this->assertEqualsCanonicalizing([1500, 2200, 3300], $entry->items->pluck('fee')->all());
     }
 
-    public function test_junior_high_runners_race_together_and_division_is_shown_for_awards(): void
+    public function test_division_is_shown_in_roster_and_excel_for_awards(): void
     {
         $admin = User::factory()->admin()->create();
-        foreach ([['中学', '中学生', "16'00", 'M'], ['高校', '高校生', "15'00", 'M'], ['一般', '一般', "14'30", 'M'], ['女子', '中学生', "18'00", 'F']] as [$name, $category, $time, $gender]) {
+        foreach ([['中学', '中学生', "16'00"], ['一般', '一般', "14'30"]] as [$name, $category, $time]) {
             $team = User::factory()->create();
-            $athlete = Athlete::factory()->for($team)->create(['last_name' => $name, 'category' => $category, 'gender' => $gender]);
+            $athlete = Athlete::factory()->for($team)->create(['last_name' => $name, 'category' => $category]);
             $entry = $team->entries()->create(['meet_id' => $this->meet->id, 'status' => Entry::STATUS_PAID, 'total_amount' => 2200]);
             $entry->items()->create(['athlete_id' => $athlete->id, 'event_id' => $this->five->id, 'fee' => 2200, 'declared_record' => $time]);
         }
 
-        $this->actingAs($admin)->post(route('admin.program.generate', $this->meet));
+        $this->actingAs($admin)->get(route('admin.roster.index', $this->meet))
+            ->assertSee('中学生の部')->assertSee('高校・大学・一般の部');
 
-        // 中学生も同じレース（性別では分ける）
-        $races = Race::with('event', 'startListEntries')->get()->keyBy('gender');
-        $this->assertCount(2, $races);
-        $this->assertSame(3, $races['M']->startListEntries->count());
-        $this->assertSame('男子 5000m', $races['M']->name());
-
-        $this->actingAs($admin)->get(route('admin.program.show', $this->meet))
-            ->assertSee('最小遂行人数（3名）に満たないレース') // 女子1名
-            ->assertSee('中学生の部')
-            ->assertSee('ナンバー');
-        $this->actingAs($admin)->get(route('site.startlist', $this->meet))->assertSee('中学生の部')->assertSee('高校・大学・一般');
+        $path = tempnam(sys_get_temp_dir(), 'x');
+        file_put_contents($path, $this->actingAs($admin)->get(route('admin.entries.export', $this->meet))->streamedContent());
+        $rows = IOFactory::load($path)->getSheet(0)->toArray(null, false, false, false);
+        $division = array_search('部門', $rows[0], true);
+        $this->assertSame(['高校・大学・一般の部', '中学生の部'], [$rows[1][$division], $rows[2][$division]]); // 申請タイム順
     }
 
     public function test_meets_page_shows_start_time_fees_and_contact(): void

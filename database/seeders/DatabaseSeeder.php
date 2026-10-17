@@ -66,8 +66,9 @@ class DatabaseSeeder extends Seeder
             $past = Meet::factory()->create([
                 'name' => $name, 'held_on' => $date, 'eligible' => $eligible,
                 'entry_opens_at' => now()->parse($date)->subMonths(2), 'entry_closes_at' => now()->parse($date)->subWeeks(2),
-                'outline_url' => $site, 'program_url' => $site, 'result_url' => $site, 'photo_url' => $site,
+                'outline_url' => $site, 'timetable_url' => $site, 'startlist_url' => $site, 'program_url' => $site, 'result_url' => $site, 'photo_url' => $site,
                 'program_note' => $name === '第19回絆記録挑戦会' ? '0628更新' : null,
+                'startlist_note' => $name === '第19回絆記録挑戦会' ? '0628更新' : null,
                 'start_time' => '15:30',
             ]);
             foreach ($eventList as $i => [$eventName, $gender]) {

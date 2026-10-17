@@ -19,7 +19,7 @@
         </form>
     @endif
     <div class="card">
-        <form method="POST" action="{{ $meet->exists ? route('admin.meets.update', $meet) : route('admin.meets.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ $meet->exists ? route('admin.meets.update', $meet) : route('admin.meets.store') }}">
             @csrf
             @if ($meet->exists) @method('PUT') @endif
             <div class="field">
@@ -74,43 +74,10 @@
                 </div>
             </div>
 
-            <h2>大会開催ページの資料・リンク</h2>
-            <p class="muted">PDFをアップロードするか、URLを入れてください（両方ある場合はPDFを表示します）。入っているものだけボタンとして表示されます。</p>
-            @foreach (\App\Models\Meet::DOCUMENTS as $key => $label)
-                <div class="doc-field">
-                    <strong>{{ $label }}</strong>
-                    <div class="row">
-                        <div class="field">
-                            <label for="{{ $key }}_file">PDF</label>
-                            <input id="{{ $key }}_file" type="file" name="{{ $key }}_file" accept="application/pdf,.pdf">
-                            @if ($meet->{$key.'_path'})
-                                <p class="hint"><a href="{{ $meet->documentUrl($key) }}" target="_blank" rel="noopener">登録済みのPDFを見る</a>
-                                    <label class="inline"><input type="checkbox" name="{{ $key }}_remove" value="1"> PDFを削除</label></p>
-                            @endif
-                        </div>
-                        <div class="field">
-                            <label for="{{ $key }}_url">またはURL</label>
-                            <input id="{{ $key }}_url" type="url" name="{{ $key }}_url" value="{{ old($key.'_url', $meet->{$key.'_url'}) }}" placeholder="https://">
-                        </div>
-                        @if ($key === 'program')
-                            <div class="field">
-                                <label for="program_note">更新メモ <span class="hint">（例：0628更新）</span></label>
-                                <input id="program_note" type="text" name="program_note" value="{{ old('program_note', $meet->program_note) }}">
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endforeach
-            <div class="row">
-                <div class="field">
-                    <label for="photo_url">写真館（URL）</label>
-                    <input id="photo_url" type="url" name="photo_url" value="{{ old('photo_url', $meet->photo_url) }}" placeholder="https://">
-                </div>
-                <div class="field">
-                    <label for="press_url">取材・撮影のお申込み（URL）</label>
-                    <input id="press_url" type="url" name="press_url" value="{{ old('press_url', $meet->press_url) }}" placeholder="https://">
-                </div>
-            </div>
+            @if ($meet->exists)
+                <p class="muted">大会要項・タイムテーブル・組編成・プログラム・リザルトのPDFと、写真館・取材申込みのリンクは
+                    <a href="{{ route('admin.documents.edit', $meet) }}">大会資料（PDF）</a>の画面で貼ります。</p>
+            @endif
 
             <div class="field">
                 <label for="notes">案内文 <span class="hint">（大会開催ページ・エントリー画面に表示）</span></label>

@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Entry;
 use App\Models\Meet;
-use App\Models\Race;
 use App\Services\GradeAdvance;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -33,76 +30,6 @@ class SiteController extends Controller
             'next' => $published->first(fn (Meet $m) => $m->stage() !== 'finished'),
             'pastResults' => $this->pastResults($years, $current),
         ]);
-    }
-
-    /**
-     * タイムテーブル（全レースの各組のスタート時刻）。
-     */
-    public function timetable(Request $request, Meet $meet): View
-    {
-        $this->authorizeStartList($request, $meet);
-
-        return view('site.timetable', ['meet' => $meet, 'rows' => $this->timetableRows($meet)]);
-    }
-
-    public function startList(Request $request, Meet $meet): View
-    {
-        $this->authorizeStartList($request, $meet);
-
-        return view('site.startlist', ['meet' => $meet, 'races' => $this->racesWithRunners($meet)]);
-    }
-
-    /**
-     * 大会プログラム（タイムテーブル＋スタートリスト）。印刷してPDFにもできる。
-     */
-    public function program(Request $request, Meet $meet): View
-    {
-        $this->authorizeStartList($request, $meet);
-
-        return view('site.program', [
-            'meet' => $meet,
-            'rows' => $this->timetableRows($meet),
-            'races' => $this->racesWithRunners($meet),
-        ]);
-    }
-
-    /**
-     * 公開前（未公開）は運営だけが見られる。
-     */
-    private function authorizeStartList(Request $request, Meet $meet): void
-    {
-        abort_unless($meet->is_published && $meet->hasPublicStartList() || $request->user()?->is_admin, 404);
-    }
-
-    private function racesWithRunners(Meet $meet)
-    {
-        return $meet->races()
-            ->with(['event', 'startListEntries' => fn ($q) => $q->whereHas('entryItem.entry', fn ($e) => $e->where('status', Entry::STATUS_PAID)),
-                'startListEntries.entryItem.athlete', 'startListEntries.entryItem.entry.user'])
-            ->get()
-            ->filter(fn (Race $r) => $r->startListEntries->isNotEmpty())
-            ->values();
-    }
-
-    /**
-     * @return Collection<int, array{time: ?string, race: Race, heat: int, count: int}>
-     */
-    private function timetableRows(Meet $meet)
-    {
-        return $this->racesWithRunners($meet)
-            ->flatMap(fn (Race $race) => $race->heats()->map(fn ($entries, $heat) => [
-                'time' => $race->heatStartTime((int) $heat),
-                'race' => $race,
-                'heat' => (int) $heat,
-                'count' => $entries->count(),
-            ])->values())
-            ->sortBy([
-                fn ($a, $b) => ($a['time'] === null) <=> ($b['time'] === null),
-                fn ($a, $b) => strcmp(str_pad((string) $a['time'], 5, '0', STR_PAD_LEFT), str_pad((string) $b['time'], 5, '0', STR_PAD_LEFT)),
-                fn ($a, $b) => $a['race']->sort_order <=> $b['race']->sort_order,
-                fn ($a, $b) => $a['heat'] <=> $b['heat'],
-            ])
-            ->values();
     }
 
     /**

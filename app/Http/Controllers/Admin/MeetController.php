@@ -8,7 +8,6 @@ use App\Models\Meet;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -95,7 +94,7 @@ class MeetController extends Controller
 
     public function update(Request $request, Meet $meet): RedirectResponse
     {
-        $meet->update($this->validated($request, $meet));
+        $meet->update($this->validated($request));
 
         return redirect()->route('admin.meets.show', $meet)->with('status', '大会情報を更新しました。');
     }
@@ -143,7 +142,7 @@ class MeetController extends Controller
         return preg_replace_callback('/第(\d+)回/u', fn ($m) => '第'.((int) $m[1] + 1).'回', $name, 1);
     }
 
-    private function validated(Request $request, ?Meet $meet = null): array
+    private function validated(Request $request): array
     {
         $rules = [
             'name' => ['required', 'string', 'max:100'],
@@ -159,34 +158,11 @@ class MeetController extends Controller
             'fee_student' => ['nullable', 'integer', 'min:50', 'max:100000'],
             'fee_general' => ['nullable', 'integer', 'min:50', 'max:100000'],
             'eligible' => ['nullable', 'string', 'max:100'],
-            'program_note' => ['nullable', 'string', 'max:50'],
-            'photo_url' => ['nullable', 'url', 'max:500'],
-            'press_url' => ['nullable', 'url', 'max:500'],
         ];
-        foreach (array_keys(Meet::DOCUMENTS) as $key) {
-            $rules[$key.'_url'] = ['nullable', 'url', 'max:500'];
-            $rules[$key.'_file'] = ['nullable', 'file', 'mimes:pdf', 'max:20480'];
-        }
         $data = $request->validate($rules, [], [
-            'outline_file' => '大会要項のPDF', 'program_file' => '大会プログラムのPDF', 'result_file' => 'リザルトのPDF',
-            'outline_url' => '大会要項のURL', 'program_url' => '大会プログラムのURL', 'result_url' => 'リザルトのURL',
-            'photo_url' => '写真館のURL', 'press_url' => '取材・撮影のお申込みのURL', 'division' => '部門', 'eligible' => '対象',
+            'division' => '部門', 'eligible' => '対象',
             'start_time' => '競技開始予定', 'fee_junior_high' => '中学生の参加料', 'fee_student' => '高校生・大学生の参加料', 'fee_general' => '一般・実業団の参加料',
         ]);
-
-        // PDFは公開用の保存場所に置く（差し替え・削除のときは古いファイルを消す）
-        foreach (array_keys(Meet::DOCUMENTS) as $key) {
-            unset($data[$key.'_file']);
-            $old = $meet?->{$key.'_path'};
-            if ($request->hasFile($key.'_file')) {
-                $data[$key.'_path'] = $request->file($key.'_file')->store('meets', 'public');
-            } elseif ($request->boolean($key.'_remove')) {
-                $data[$key.'_path'] = null;
-            }
-            if ($old && array_key_exists($key.'_path', $data) && $data[$key.'_path'] !== $old) {
-                Storage::disk('public')->delete($old);
-            }
-        }
 
         $data['division'] = ($data['division'] ?? null) ?: '公認の部';
 

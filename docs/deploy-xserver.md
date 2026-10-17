@@ -138,4 +138,6 @@ cd ~/kizuna-entry && /usr/bin/php8.3 artisan kizuna:make-admin 登録したメ�
 - 大会開催ページの写真は `public/images/hero.jpg`、ロゴは `public/images/logo.png` です。
   今は現在のサイトの画面から切り出したもの（解像度が低め）なので、元の写真・ロゴのデータがあれば同じ名前で差し替えてください
   （写真は横長・幅2000px程度、ロゴは背景が透明なPNGが最適です）。
-- 大会要項などのPDFは `storage/app/public/meets` に保存され、`/storage/...` で公開されます（自動アップロード時に `storage:link` を実行します）。
+- 大会要項・タイムテーブル・組編成・プログラム・リザルトのPDFは `storage/app/public/meets` に保存され、`/storage/...` で公開されます（自動アップロード時に `storage:link` を実行します）。
+- 1ファイル40MBまで貼れるようにしています。写真判定機のリザルトなど大きなPDFを貼るときは、サーバーパネルの「php.ini設定」で
+  `upload_max_filesize` と `post_max_size` を 50M 程度にしておいてください。

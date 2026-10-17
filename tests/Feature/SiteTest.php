@@ -62,34 +62,50 @@ class SiteTest extends TestCase
         $this->assertSame('open', $open->stage());
     }
 
-    public function test_admin_can_upload_pdfs_and_links_for_the_meets_page(): void
+    public function test_admin_can_attach_pdfs_for_timetable_startlist_program_and_results(): void
     {
         Storage::fake('public');
         $admin = User::factory()->admin()->create();
         $meet = Meet::factory()->create(['held_on' => '2026-11-15']);
         Event::factory()->for($meet)->create(['name' => '5000m', 'gender' => null]);
 
-        $this->actingAs($admin)->put(route('admin.meets.update', $meet), [
-            'name' => $meet->name, 'held_on' => '2026-11-15',
-            'entry_opens_at' => '2026-10-01T00:00', 'entry_closes_at' => '2026-10-31T23:59',
-            'max_events_per_athlete' => 2, 'is_published' => '1',
-            'division' => '公認の部', 'eligible' => '高校生・大学生・一般',
-            'outline_file' => UploadedFile::fake()->create('要項.pdf', 100, 'application/pdf'),
+        $this->actingAs($admin)->get(route('admin.documents.edit', $meet))->assertOk()
+            ->assertSee('エントリーデータをExcelで出力')->assertSee('組編成（スタートリスト）');
+
+        $this->actingAs($admin)->post(route('admin.documents.update', $meet), [
+            'timetable_file' => UploadedFile::fake()->create('timetable.pdf', 100, 'application/pdf'),
+            'startlist_file' => UploadedFile::fake()->create('startlist.pdf', 100, 'application/pdf'),
+            'startlist_note' => '暫定版',
+            'result_file' => UploadedFile::fake()->create('photo-finish.pdf', 3000, 'application/pdf'),
             'photo_url' => 'https://example.com/photo',
-        ])->assertRedirect();
+        ])->assertRedirect(route('admin.documents.edit', $meet));
 
         $meet->refresh();
-        Storage::disk('public')->assertExists($meet->outline_path);
-        $this->get('/')->assertSee($meet->documentUrl('outline'))->assertSee('高校生・大学生・一般');
+        foreach (['timetable', 'startlist', 'result'] as $key) {
+            Storage::disk('public')->assertExists($meet->{$key.'_path'});
+        }
+        $this->get('/')
+            ->assertSee($meet->documentUrl('timetable'))
+            ->assertSee('スタートリスト')
+            ->assertSee('暫定版')
+            ->assertSee($meet->documentUrl('result'))
+            ->assertSee('https://example.com/photo');
 
-        // PDFを削除すると、ファイルも消える
-        $path = $meet->outline_path;
-        $this->actingAs($admin)->put(route('admin.meets.update', $meet), [
-            'name' => $meet->name, 'held_on' => '2026-11-15',
-            'entry_opens_at' => '2026-10-01T00:00', 'entry_closes_at' => '2026-10-31T23:59',
-            'max_events_per_athlete' => 2, 'division' => '公認の部', 'outline_remove' => '1',
-        ])->assertRedirect();
-        Storage::disk('public')->assertMissing($path);
-        $this->assertNull($meet->fresh()->outline_path);
+        // 差し替え・削除
+        $old = $meet->startlist_path;
+        $this->actingAs($admin)->post(route('admin.documents.update', $meet), [
+            'startlist_file' => UploadedFile::fake()->create('startlist2.pdf', 100, 'application/pdf'),
+            'startlist_note' => '1110更新',
+            'timetable_remove' => '1',
+        ]);
+        $meet->refresh();
+        Storage::disk('public')->assertMissing($old);
+        $this->assertNull($meet->timetable_path);
+        $this->assertSame('1110更新', $meet->startlist_note);
+
+        // PDF以外は貼れない
+        $this->actingAs($admin)->post(route('admin.documents.update', $meet), [
+            'program_file' => UploadedFile::fake()->create('program.xlsx', 10),
+        ])->assertSessionHasErrors('program_file');
     }
 }
