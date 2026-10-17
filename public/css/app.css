@@ -339,3 +339,6 @@ input[type=time] { padding: 6px 8px; font: inherit; border: 1px solid var(--bord
 .contact-box h2 { margin: 0 0 6px; font-size: 1rem; color: var(--brand-ink); }
 .contact-box p { margin: 0; }
 .terms { background: var(--warn-bg); padding: 10px 12px; border-radius: 8px; }
+
+.div-junior { display: inline-block; font-size: .78rem; font-weight: 700; padding: 0 8px; border-radius: 4px; background: #fde7c6; color: #7a4a00; white-space: nowrap; }
+.div-open { font-size: .8rem; color: var(--muted); white-space: nowrap; }

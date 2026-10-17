@@ -111,8 +111,8 @@
                 @foreach ($race->heats() as $heat => $entries)
                     <div class="table-wrap heat-table">
                         <table>
-                            <thead><tr><th colspan="7">{{ $heat }}組 @if ($time = $race->heatStartTime($heat))<span class="muted">{{ $time }} スタート</span>@endif</th></tr>
-                            <tr><th class="num">ナンバー</th><th>氏名</th><th>所属</th><th>種別・学年</th><th>申請タイム</th><th>自己ベスト</th><th>組</th></tr></thead>
+                            <thead><tr><th colspan="8">{{ $heat }}組 @if ($time = $race->heatStartTime($heat))<span class="muted">{{ $time }} スタート</span>@endif</th></tr>
+                            <tr><th class="num">ナンバー</th><th>氏名</th><th>所属</th><th>種別・学年</th><th>部門</th><th>申請タイム</th><th>自己ベスト</th><th>組</th></tr></thead>
                             <tbody>
                             @foreach ($entries as $sle)
                                 @php $item = $sle->entryItem; $user = $item->entry->user; @endphp
@@ -121,6 +121,7 @@
                                     <td>{{ $item->athlete->fullName() }} @unless ($item->entry->isPaid())<span class="badge cancelled">取消</span>@endunless</td>
                                     <td>{{ $user->isIndividual() ? ($user->team_name ?: '個人') : $user->displayName() }}</td>
                                     <td>{{ $item->athlete->category }}{{ $item->athlete->grade ? ' '.$item->athlete->grade.'年' : '' }}</td>
+                                    <td>{{ $item->athlete->divisionLabel() }}</td>
                                     <td>{{ $item->declared_record }}</td>
                                     <td>{{ $item->personal_best }}</td>
                                     <td>

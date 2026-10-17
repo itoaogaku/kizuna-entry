@@ -79,7 +79,8 @@ class Meet extends Model
     }
 
     /**
-     * 部門：中学生は「中学生の部」、それ以外は「高校生・大学生・一般の部」。組分けはこの部門ごとに分ける。
+     * 部門：中学生は「中学生の部」、それ以外は「高校生・大学生・一般の部」。
+     * レースは一緒に走り（組分けは種目×性別）、表彰を部門ごとに行う。
      */
     public static function divisionOf(?string $category): string
     {
@@ -87,6 +88,9 @@ class Meet extends Model
     }
 
     public const DIVISION_LABELS = ['junior' => '中学生の部', 'open' => '高校生・大学生・一般の部'];
+
+    /** スタートリストなどに出す短い表記 */
+    public const DIVISION_SHORT = ['junior' => '中学', 'open' => '一般'];
 
     public function startTimeLabel(): ?string
     {

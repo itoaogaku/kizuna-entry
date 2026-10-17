@@ -67,27 +67,29 @@ class GuidelineTest extends TestCase
         $this->assertEqualsCanonicalizing([1500, 2200, 3300], $entry->items->pluck('fee')->all());
     }
 
-    public function test_junior_high_runners_race_separately(): void
+    public function test_junior_high_runners_race_together_and_division_is_shown_for_awards(): void
     {
         $admin = User::factory()->admin()->create();
-        foreach ([['中学生', "16'00"], ['中学生', "16'30"], ['高校生', "15'00"], ['一般', "14'30"]] as $i => [$category, $time]) {
+        foreach ([['中学', '中学生', "16'00", 'M'], ['高校', '高校生', "15'00", 'M'], ['一般', '一般', "14'30", 'M'], ['女子', '中学生', "18'00", 'F']] as [$name, $category, $time, $gender]) {
             $team = User::factory()->create();
-            $athlete = Athlete::factory()->for($team)->create(['last_name' => '選手'.$i, 'category' => $category]);
+            $athlete = Athlete::factory()->for($team)->create(['last_name' => $name, 'category' => $category, 'gender' => $gender]);
             $entry = $team->entries()->create(['meet_id' => $this->meet->id, 'status' => Entry::STATUS_PAID, 'total_amount' => 2200]);
             $entry->items()->create(['athlete_id' => $athlete->id, 'event_id' => $this->five->id, 'fee' => 2200, 'declared_record' => $time]);
         }
 
         $this->actingAs($admin)->post(route('admin.program.generate', $this->meet));
 
-        $races = Race::with('event', 'startListEntries')->get()->keyBy('division');
-        $this->assertSame(2, $races['junior']->startListEntries->count());
-        $this->assertSame(2, $races['open']->startListEntries->count());
-        $this->assertSame('男子 5000m（中学生の部）', $races['junior']->name());
-        $this->assertSame('男子 5000m（高校生・大学生・一般の部）', $races['open']->name());
+        // 中学生も同じレース（性別では分ける）
+        $races = Race::with('event', 'startListEntries')->get()->keyBy('gender');
+        $this->assertCount(2, $races);
+        $this->assertSame(3, $races['M']->startListEntries->count());
+        $this->assertSame('男子 5000m', $races['M']->name());
 
         $this->actingAs($admin)->get(route('admin.program.show', $this->meet))
-            ->assertSee('最小遂行人数（3名）に満たないレース')
+            ->assertSee('最小遂行人数（3名）に満たないレース') // 女子1名
+            ->assertSee('中学生の部')
             ->assertSee('ナンバー');
+        $this->actingAs($admin)->get(route('site.startlist', $this->meet))->assertSee('中学生の部')->assertSee('高校・大学・一般');
     }
 
     public function test_meets_page_shows_start_time_fees_and_contact(): void

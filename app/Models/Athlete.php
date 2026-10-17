@@ -47,6 +47,14 @@ class Athlete extends Model
         return $this->last_name.' '.$this->first_name;
     }
 
+    /**
+     * 表彰の部門（中学生の部／高校生・大学生・一般の部）。
+     */
+    public function divisionLabel(): string
+    {
+        return Meet::divisionOf($this->category) === 'junior' ? '中学生の部' : '高校・大学・一般の部';
+    }
+
     public function genderLabel(): string
     {
         return self::GENDERS[$this->gender] ?? '';

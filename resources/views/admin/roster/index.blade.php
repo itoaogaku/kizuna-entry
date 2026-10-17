@@ -48,7 +48,7 @@
                 <thead>
                 <tr>
                     <th class="num">順</th><th>申請タイム</th><th>自己ベスト</th><th>氏名</th><th>フリガナ</th>
-                    <th>団体名・所属</th><th>種別・学年</th><th>性別</th><th>所属陸協</th><th>PRしたい一言</th><th>状態</th>
+                    <th>団体名・所属</th><th>種別・学年</th><th>部門</th><th>性別</th><th>所属陸協</th><th>PRしたい一言</th><th>状態</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -69,6 +69,7 @@
                             @if ($item->entry->isFromSheet())<span class="badge" title="エクセル添付で申込み">Excel</span>@endif
                         </td>
                         <td>{{ $item->athlete->category }}{{ $item->athlete->grade ? ' '.$item->athlete->grade.'年' : '' }}</td>
+                        <td>{{ $item->athlete->divisionLabel() }}</td>
                         <td>{{ $item->athlete->genderLabel() }}</td>
                         <td>{{ $item->athlete->association }}</td>
                         <td style="white-space:normal;min-width:160px">{{ $item->pr_comment }}</td>

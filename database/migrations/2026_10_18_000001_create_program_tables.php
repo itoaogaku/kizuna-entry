@@ -21,14 +21,13 @@ return new class extends Migration
             $table->foreignId('meet_id')->constrained()->cascadeOnDelete();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->string('gender', 1); // M / F
-            $table->string('division', 20)->default('open'); // junior=中学生の部 / open=高校生・大学生・一般の部
             $table->time('start_time')->nullable(); // 1組目のスタート時刻
             $table->unsignedInteger('heat_size')->default(20); // 1組の最大人数
             $table->unsignedInteger('heat_interval')->default(10); // 組と組の間隔（分）
             $table->boolean('fastest_last')->default(true); // 速い組を最後にする
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
-            $table->unique(['meet_id', 'event_id', 'gender', 'division']);
+            $table->unique(['meet_id', 'event_id', 'gender']);
         });
 
         // スタートリスト（レースの何組目の何番目か）

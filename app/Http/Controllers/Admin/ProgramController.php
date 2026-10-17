@@ -127,7 +127,7 @@ class ProgramController extends Controller
         foreach ($races as $race) {
             $sheet = $book->createSheet();
             $sheet->setTitle(mb_substr(preg_replace('/[\\\\\/\?\*\[\]:]/u', '・', $race->name()), 0, 31));
-            $sheet->fromArray(['組', 'スタート', 'ナンバー', '氏名', 'フリガナ', '所属', '種別・学年', '所属陸協', '申請タイム', '自己ベスト'], null, 'A1');
+            $sheet->fromArray(['組', 'スタート', 'ナンバー', '氏名', 'フリガナ', '所属', '種別・学年', '部門', '所属陸協', '申請タイム', '自己ベスト'], null, 'A1');
             $row = 2;
             foreach ($race->startListEntries as $sle) {
                 $item = $sle->entryItem;
@@ -135,10 +135,10 @@ class ProgramController extends Controller
                 $sheet->fromArray([
                     $sle->heat, $race->heatStartTime($sle->heat), $sle->position, $a->fullName(), $a->kana,
                     $item->entry->user->isIndividual() ? ($item->entry->user->team_name ?: '個人') : $item->entry->user->displayName(),
-                    trim($a->category.' '.($a->grade ? $a->grade.'年' : '')), $a->association, $item->declared_record, $item->personal_best,
+                    trim($a->category.' '.($a->grade ? $a->grade.'年' : '')), $a->divisionLabel(), $a->association, $item->declared_record, $item->personal_best,
                 ], null, 'A'.$row++, true);
             }
-            foreach (range('A', 'J') as $col) {
+            foreach (range('A', 'K') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
         }

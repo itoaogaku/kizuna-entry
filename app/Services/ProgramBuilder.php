@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * タイムテーブルとスタートリスト（組分け）を作る。
- * 入金済みの申込を、レース（種目×男女）ごとに申請タイム順（同タイムは自己ベスト順）に並べて組に分ける。
+ * 入金済みの申込を、レース（種目×男女。中学生の部も一緒に走る）ごとに申請タイム順（同タイムは自己ベスト順）に並べて組に分ける。
  */
 class ProgramBuilder
 {
@@ -27,7 +27,7 @@ class ProgramBuilder
     {
         $items = $this->paidItems($meet);
         $needed = $items->map(fn (EntryItem $i) => $this->raceKey($i))->unique();
-        $existing = $meet->races()->get()->keyBy(fn (Race $r) => $r->event_id.'-'.$r->gender.'-'.$r->division);
+        $existing = $meet->races()->get()->keyBy(fn (Race $r) => $r->event_id.'-'.$r->gender);
 
         foreach ($existing as $key => $race) {
             if (! $needed->contains($key)) {
@@ -39,23 +39,19 @@ class ProgramBuilder
         $order = 0;
         foreach ($events as $event) {
             foreach (['M', 'F'] as $gender) {
-                // 部門ごとに別のレース（高校生・大学生・一般の部 → 中学生の部の順）
-                foreach (['open', 'junior'] as $division) {
-                    $key = $event->id.'-'.$gender.'-'.$division;
-                    $order += 10;
-                    if (! $needed->contains($key) || $existing->has($key)) {
-                        continue;
-                    }
-                    $meet->races()->create([
-                        'event_id' => $event->id,
-                        'gender' => $gender,
-                        'division' => $division,
-                        'heat_size' => self::DEFAULT_HEAT_SIZE[$event->name] ?? 20,
-                        'heat_interval' => 10,
-                        'fastest_last' => true,
-                        'sort_order' => $order,
-                    ]);
+                $key = $event->id.'-'.$gender;
+                $order += 10;
+                if (! $needed->contains($key) || $existing->has($key)) {
+                    continue;
                 }
+                $meet->races()->create([
+                    'event_id' => $event->id,
+                    'gender' => $gender,
+                    'heat_size' => self::DEFAULT_HEAT_SIZE[$event->name] ?? 20,
+                    'heat_interval' => 10,
+                    'fastest_last' => true,
+                    'sort_order' => $order,
+                ]);
             }
         }
 
@@ -74,7 +70,7 @@ class ProgramBuilder
             foreach ($races as $race) {
                 $race->startListEntries()->delete();
                 $runners = EntryOrder::sort($items->filter(
-                    fn (EntryItem $i) => $this->raceKey($i) === $race->event_id.'-'.$race->gender.'-'.$race->division
+                    fn (EntryItem $i) => $this->raceKey($i) === $race->event_id.'-'.$race->gender
                 ));
                 foreach ($this->split($runners, $race) as $heat => $group) {
                     foreach ($group->values() as $position => $item) {
@@ -176,11 +172,11 @@ class ProgramBuilder
     }
 
     /**
-     * 申込がどのレースに入るか（種目-性別-部門）。
+     * 申込がどのレースに入るか（種目-性別）。中学生の部も同じレースで走る。
      */
     private function raceKey(EntryItem $item): string
     {
-        return $item->event_id.'-'.$item->athlete->gender.'-'.Meet::divisionOf($item->athlete->category);
+        return $item->event_id.'-'.$item->athlete->gender;
     }
 
     private function renumber(Race $race): void

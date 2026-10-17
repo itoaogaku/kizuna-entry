@@ -21,7 +21,7 @@ class EntryExport
 {
     private const HEADER = [
         'No', '団体名', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '申込み種目', '申請タイム', '自己ベスト',
-        '種別', 'PRしたい一言', '料金', '受付番号', '申込区分', '状態', '入金日時', '申込者', '電話番号', 'メール',
+        '種別', 'PRしたい一言', '料金', '部門', '受付番号', '申込区分', '状態', '入金日時', '申込者', '電話番号', 'メール',
     ];
 
     public function build(Meet $meet, string $status): Spreadsheet
@@ -58,8 +58,8 @@ class EntryExport
     {
         $sheet->setTitle(mb_substr(preg_replace('/[\\\\\/\?\*\[\]:]/u', '・', $title), 0, 31));
         $sheet->fromArray(self::HEADER, null, 'A1');
-        $sheet->getStyle('A1:U1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:U1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('DDEBF7');
+        $sheet->getStyle('A1:V1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:V1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('DDEBF7');
         $sheet->freezePane('C2');
 
         foreach ($items->values() as $i => $item) {
@@ -81,6 +81,7 @@ class EntryExport
                 $a->category,
                 $item->pr_comment,
                 $item->fee,
+                $a->divisionLabel(),
                 $e->id,
                 $e->user->typeLabel().($e->isFromSheet() && ! $e->user->isSheetOnly() ? '（エクセル添付）' : ''),
                 $e->statusLabel(),
