@@ -51,6 +51,8 @@ return [
     // 運営への通知先（入金完了メールのBCCなど）
     'kizuna' => [
         'admin_email' => env('KIZUNA_ADMIN_EMAIL'),
+        // テスト環境で運営者にするアカウント（カンマ区切り）。kizuna:make-admin が使う
+        'admin_accounts' => env('KIZUNA_ADMIN_ACCOUNTS'),
     ],
 
 ];

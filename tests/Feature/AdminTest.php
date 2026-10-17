@@ -163,4 +163,14 @@ class AdminTest extends TestCase
 
         $this->assertDatabaseCount('meets', 0);
     }
+
+    public function test_make_admin_command_reads_accounts_from_config_and_skips_missing_ones(): void
+    {
+        $user = User::factory()->create(['email' => 'kizuna@example.com']);
+        config(['services.kizuna.admin_accounts' => 'kizuna@example.com, missing@example.com']);
+
+        $this->artisan('kizuna:make-admin --if-exists')->assertSuccessful();
+        $this->assertTrue($user->fresh()->is_admin);
+        $this->artisan('kizuna:make-admin missing@example.com')->assertFailed();
+    }
 }

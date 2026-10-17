@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 // 公開サイト：大会開催
 Route::get('/', [SiteController::class, 'meets'])->name('site.meets');
+Route::view('/legal', 'site.legal')->name('site.legal');
 Route::get('/meets/{meet}/press', [PressController::class, 'create'])->name('press.create');
 Route::post('/meets/{meet}/press', [PressController::class, 'store'])->middleware('throttle:10,1')->name('press.store');
 

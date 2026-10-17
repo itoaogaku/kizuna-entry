@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@500;600&display=swap">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=17">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=18">
 </head>
 <body>
 <header class="site">
@@ -73,6 +73,7 @@
             <a href="{{ route('site.meets') }}">大会開催</a>
             <a href="{{ route('home') }}">エントリー</a>
             <a href="{{ route('sheet.create') }}">エクセル添付で申し込む</a>
+            <a href="{{ route('site.legal') }}">特定商取引法に基づく表記</a>
         </nav>
         <p class="copy">&copy; {{ date('Y') }} {{ $org['name'] }}</p>
     </div>

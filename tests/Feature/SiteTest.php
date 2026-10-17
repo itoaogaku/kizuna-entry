@@ -108,4 +108,13 @@ class SiteTest extends TestCase
             'program_file' => UploadedFile::fake()->create('program.xlsx', 10),
         ])->assertSessionHasErrors('program_file');
     }
+
+    public function test_legal_notice_page_lists_seller_and_refund_policy(): void
+    {
+        $this->get(route('site.legal'))->assertOk()
+            ->assertSee('特定商取引法に基づく表記')
+            ->assertSee('株式会社アスリートキャリアセンター')
+            ->assertSee('返金はお受けしていません');
+        $this->get(route('site.meets'))->assertSee(route('site.legal'));
+    }
 }

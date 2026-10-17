@@ -351,3 +351,7 @@ a.badge { text-decoration: none; }
 
 .receipt-form { display: flex; gap: 4px; margin-top: 4px; }
 .receipt-form input[type=text] { min-width: 0; width: 140px; padding: 3px 6px; font-size: .85rem; }
+
+/* 特定商取引法に基づく表記 */
+.legal th, .legal td { white-space: normal; vertical-align: top; }
+.legal th { width: 30%; min-width: 120px; }

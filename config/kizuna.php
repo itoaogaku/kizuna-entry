@@ -21,6 +21,12 @@ return [
         'tax_rate' => 10,
     ],
 
+    // 特定商取引法に基づく表記（/legal）。決済サービス（Stripe・KOMOJU）の審査で必要
+    'legal' => [
+        'manager' => env('KIZUNA_LEGAL_MANAGER', '伊藤雅一'),
+        'cancellation' => env('KIZUNA_LEGAL_CANCELLATION', '大会が中止となった場合の扱いは、大会要項またはお知らせでご案内します。'),
+    ],
+
     // プログラム用Excelで組分け案を作るときの、種目ごとの1組の人数（運営がExcelで調整する前提の目安）
     'heat_size' => [
         '800m' => 12,
