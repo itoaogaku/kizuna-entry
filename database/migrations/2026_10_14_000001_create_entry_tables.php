@@ -36,6 +36,18 @@ return new class extends Migration
             $table->unsignedInteger('max_events_per_athlete')->default(2);
             $table->boolean('is_published')->default(false);
             $table->text('notes')->nullable();
+            // 大会開催ページに出す内容
+            $table->string('division')->default('公認の部'); // 部門
+            $table->string('eligible')->nullable(); // 対象（例：中学生・高校生・大学生・一般）
+            $table->string('outline_url')->nullable(); // 大会要項（URL）
+            $table->string('outline_path')->nullable(); // 大会要項（アップロードしたPDF）
+            $table->string('program_url')->nullable();
+            $table->string('program_path')->nullable();
+            $table->string('program_note')->nullable(); // 例：0628更新
+            $table->string('result_url')->nullable();
+            $table->string('result_path')->nullable();
+            $table->string('photo_url')->nullable(); // 写真館
+            $table->string('press_url')->nullable(); // 取材・撮影のお申込み
             $table->timestamps();
         });
 

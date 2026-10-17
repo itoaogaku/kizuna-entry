@@ -132,3 +132,10 @@ cd ~/kizuna-entry && /usr/bin/php8.3 artisan kizuna:make-admin 登録したメ�
 
 `.env` を変えたら、SSH で `cd ~/kizuna-entry && /usr/bin/php8.3 artisan optimize` を実行して設定を読み込み直します。
 本番に切り替えるときは、Stripe・KOMOJU とも本番モードのキーと Webhook で同じ設定をやり直します。
+
+## 9. 大会開催ページの写真・ロゴ
+
+- 大会開催ページの写真は `public/images/hero.jpg`、ロゴは `public/images/logo.png` です。
+  今は現在のサイトの画面から切り出したもの（解像度が低め）なので、元の写真・ロゴのデータがあれば同じ名前で差し替えてください
+  （写真は横長・幅2000px程度、ロゴは背景が透明なPNGが最適です）。
+- 大会要項などのPDFは `storage/app/public/meets` に保存され、`/storage/...` で公開されます（自動アップロード時に `storage:link` を実行します）。

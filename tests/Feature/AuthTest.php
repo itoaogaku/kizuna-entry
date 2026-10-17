@@ -13,7 +13,7 @@ class AuthTest extends TestCase
 
     public function test_first_screen_asks_team_or_individual(): void
     {
-        $this->get('/')
+        $this->get('/entry')
             ->assertOk()
             ->assertSee('団体申し込み')
             ->assertSee('個人申し込み')
@@ -24,7 +24,7 @@ class AuthTest extends TestCase
     public function test_pages_requiring_login_send_guests_to_the_first_screen(): void
     {
         $this->get('/entries')->assertRedirect('/login');
-        $this->get('/login')->assertRedirect('/');
+        $this->get('/login')->assertRedirect('/entry');
     }
 
     public function test_team_can_register_and_is_logged_in(): void

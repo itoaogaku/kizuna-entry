@@ -49,7 +49,7 @@ jobs:
           rsync -az --delete \
             -e "ssh -i ~/.ssh/id_deploy -p ${{ secrets.XSERVER_PORT || '10022' }}" \
             --exclude '.git/' --exclude '.github/' --exclude 'tests/' --exclude 'node_modules/' \
-            --exclude '/.env' --exclude '/storage/' --exclude '/database/database.sqlite' \
+            --exclude '/.env' --exclude '/storage/' --exclude '/public/storage' --exclude '/database/database.sqlite' \
             ./ "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}:${APP_DIR}/"
 
       - name: Migrate and cache
@@ -63,5 +63,6 @@ jobs:
             ${PHP_BIN} artisan down --retry=30 || true
             trap '${PHP_BIN} artisan up' EXIT
             ${PHP_BIN} artisan migrate --force
+            ${PHP_BIN} artisan storage:link || true
             ${PHP_BIN} artisan optimize
           "

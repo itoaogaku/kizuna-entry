@@ -10,10 +10,15 @@ use App\Http\Controllers\EntryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KomojuWebhookController;
 use App\Http\Controllers\SheetEntryController;
+use App\Http\Controllers\SiteController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', HomeController::class)->name('home');
+// 公開サイト：大会開催
+Route::get('/', [SiteController::class, 'meets'])->name('site.meets');
+
+// エントリーの入口（ログイン前：方法の選択／ログイン後：受付中の大会）
+Route::get('/entry', HomeController::class)->name('home');
 
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 Route::post('/komoju/webhook', KomojuWebhookController::class)->name('komoju.webhook');
@@ -28,7 +33,7 @@ Route::get('/sheet-entry/{entry}/pay', [SheetEntryController::class, 'pay'])->na
 Route::get('/sheet-entry/{entry}/cancelled', [SheetEntryController::class, 'cancelled'])->name('sheet.cancelled');
 
 // ログインが必要な画面からは、最初の選択画面（団体／個人）に戻す
-Route::redirect('/login', '/')->name('login');
+Route::redirect('/login', '/entry')->name('login');
 
 Route::middleware('guest')->group(function () {
     // 団体申し込み

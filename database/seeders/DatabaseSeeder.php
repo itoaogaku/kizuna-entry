@@ -53,16 +53,41 @@ class DatabaseSeeder extends Seeder
             'gender' => 'M', 'category' => '一般', 'association' => '東京',
         ]);
 
+        // 2026年度の大会（今のサイトの開催予定と同じ内容。資料のURLは仮）
+        $site = 'https://acckizuna.com/';
+        $pastMeets = [
+            ['第17回絆記録挑戦会', '2026-04-04', '高校生・大学生・一般', [['800m', 'M'], ['1500m', null], ['3000m', null], ['3000mSC', 'M'], ['5000m', 'M']]],
+            ['第18回絆記録挑戦会', '2026-05-17', '中学生・高校生・大学生・一般', [['3000m', null], ['5000m', 'M']]],
+            ['第19回絆記録挑戦会', '2026-06-27', '中学生・高校生・大学生・一般', [['3000m', null], ['5000m', null]]],
+            ['第20回絆記録挑戦会', '2026-09-26', '中学生・高校生・大学生・一般', [['1500m', null], ['3000m', null], ['5000m', null], ['10000m', 'M']]],
+        ];
+        $fees = ['800m' => 2000, '1500m' => 2000, '3000m' => 2000, '3000mSC' => 2200, '5000m' => 2200, '10000m' => 2500];
+        foreach ($pastMeets as [$name, $date, $eligible, $eventList]) {
+            $past = Meet::factory()->create([
+                'name' => $name, 'held_on' => $date, 'eligible' => $eligible,
+                'entry_opens_at' => now()->parse($date)->subMonths(2), 'entry_closes_at' => now()->parse($date)->subWeeks(2),
+                'outline_url' => $site, 'program_url' => $site, 'result_url' => $site, 'photo_url' => $site,
+                'program_note' => $name === '第19回絆記録挑戦会' ? '0628更新' : null,
+            ]);
+            foreach ($eventList as $i => [$eventName, $gender]) {
+                $past->events()->create(['name' => $eventName, 'gender' => $gender, 'fee' => $fees[$eventName], 'sort_order' => ($i + 1) * 10]);
+            }
+        }
+
+        // エントリー受付中の大会（申込一覧などの確認用）
         $meet = Meet::factory()->create([
-            'name' => '第1回 絆記録会',
-            'notes' => "料金は1種目ごとにかかります。\nお支払い後の返金はできません。\n組変更希望は、暫定版スタートリスト掲載後に組変更希望用紙で受け付けます。",
+            'name' => '第21回絆記録挑戦会',
+            'held_on' => now()->addMonth()->toDateString(),
+            'eligible' => '中学生・高校生・大学生・一般',
+            'outline_url' => $site,
+            'press_url' => $site,
+            'notes' => "料金は1種目ごとにかかります。お支払い後の返金はできません。\n組変更希望は、暫定版スタートリスト掲載後に組変更希望用紙で受け付けます。",
         ]);
-        // 種目と料金は仮の設定（エントリーシートの記入例：5000m 2,200円）
         $events = [
             ['1500m', null, 2000, 80],
             ['3000m', null, 2000, 80],
             ['5000m', null, 2200, 120],
-            ['10000m', null, 2500, 60],
+            ['10000m', 'M', 2500, 60],
         ];
         foreach ($events as $i => [$name, $gender, $fee, $capacity]) {
             $meet->events()->create([
@@ -70,7 +95,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 管理画面の確認用：入金済みの申込（2団体＋個人）
+        // 入金済みの申込（2団体＋個人）
         $five = $meet->events()->where('name', '5000m')->first();
         $other = User::factory()->create(['name' => '代表 次郎', 'team_name' => '〇〇高校', 'email' => 'koko@example.com']);
         $demo = [
@@ -90,11 +115,13 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 「前回と同じ内容で申し込む」の確認用に、次の大会も作る
+        // 次の大会（受付開始前。「前回と同じ内容で申し込む」は受付が始まると使える）
         $next = Meet::factory()->create([
-            'name' => '第2回 絆記録会',
-            'held_on' => now()->addMonths(2)->toDateString(),
-            'entry_closes_at' => now()->addWeeks(6),
+            'name' => '第22回絆記録挑戦会',
+            'held_on' => now()->addMonths(3)->toDateString(),
+            'eligible' => '中学生・高校生・大学生・一般',
+            'entry_opens_at' => now()->addMonth(),
+            'entry_closes_at' => now()->addMonths(2),
         ]);
         foreach ($events as $i => [$name, $gender, $fee, $capacity]) {
             $next->events()->create([

@@ -53,7 +53,7 @@ class EasyEntryTest extends TestCase
         $senior = Athlete::factory()->for($team)->create(['category' => '大学生', 'grade' => 4]);
         $adult = Athlete::factory()->for($team)->create(['category' => '一般', 'grade' => null]);
 
-        $this->actingAs($team)->get('/')->assertSee('新年度になりました');
+        $this->actingAs($team)->get('/entry')->assertSee('新年度になりました');
         $this->actingAs($team)->get(route('athletes.advance'))->assertOk()->assertSee('高校生 3年');
 
         $this->actingAs($team)->post(route('athletes.advance'), ['choices' => [
@@ -72,6 +72,6 @@ class EasyEntryTest extends TestCase
         // 同じ年度に2回押しても、確認なしでは学年は上がらない
         $this->actingAs($team)->post(route('athletes.advance'))->assertSessionHasErrors('again');
         $this->assertSame(3, $second->fresh()->grade);
-        $this->actingAs($team)->get('/')->assertDontSee('新年度になりました');
+        $this->actingAs($team)->get('/entry')->assertDontSee('新年度になりました');
     }
 }

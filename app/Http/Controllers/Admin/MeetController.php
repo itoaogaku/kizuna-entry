@@ -8,6 +8,7 @@ use App\Models\Meet;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -37,6 +38,8 @@ class MeetController extends Controller
             'venue' => $source?->venue,
             'max_events_per_athlete' => $source->max_events_per_athlete ?? 2,
             'notes' => $source?->notes,
+            'division' => $source->division ?? '公認の部',
+            'eligible' => $source?->eligible,
         ]);
         $events = $source
             ? $source->events->map(fn ($e) => $e->only(['name', 'gender', 'fee', 'capacity']))->all()
@@ -87,7 +90,7 @@ class MeetController extends Controller
 
     public function update(Request $request, Meet $meet): RedirectResponse
     {
-        $meet->update($this->validated($request));
+        $meet->update($this->validated($request, $meet));
 
         return redirect()->route('admin.meets.show', $meet)->with('status', '大会情報を更新しました。');
     }
@@ -135,9 +138,9 @@ class MeetController extends Controller
         return preg_replace_callback('/第(\d+)回/u', fn ($m) => '第'.((int) $m[1] + 1).'回', $name, 1);
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request, ?Meet $meet = null): array
     {
-        return $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:100'],
             'held_on' => ['required', 'date'],
             'venue' => ['nullable', 'string', 'max:100'],
@@ -145,6 +148,38 @@ class MeetController extends Controller
             'entry_closes_at' => ['required', 'date', 'after:entry_opens_at'],
             'max_events_per_athlete' => ['required', 'integer', 'min:1', 'max:10'],
             'notes' => ['nullable', 'string', 'max:2000'],
-        ]) + ['is_published' => $request->boolean('is_published')];
+            'division' => ['nullable', 'string', 'max:50'],
+            'eligible' => ['nullable', 'string', 'max:100'],
+            'program_note' => ['nullable', 'string', 'max:50'],
+            'photo_url' => ['nullable', 'url', 'max:500'],
+            'press_url' => ['nullable', 'url', 'max:500'],
+        ];
+        foreach (array_keys(Meet::DOCUMENTS) as $key) {
+            $rules[$key.'_url'] = ['nullable', 'url', 'max:500'];
+            $rules[$key.'_file'] = ['nullable', 'file', 'mimes:pdf', 'max:20480'];
+        }
+        $data = $request->validate($rules, [], [
+            'outline_file' => '大会要項のPDF', 'program_file' => '大会プログラムのPDF', 'result_file' => 'リザルトのPDF',
+            'outline_url' => '大会要項のURL', 'program_url' => '大会プログラムのURL', 'result_url' => 'リザルトのURL',
+            'photo_url' => '写真館のURL', 'press_url' => '取材・撮影のお申込みのURL', 'division' => '部門', 'eligible' => '対象',
+        ]);
+
+        // PDFは公開用の保存場所に置く（差し替え・削除のときは古いファイルを消す）
+        foreach (array_keys(Meet::DOCUMENTS) as $key) {
+            unset($data[$key.'_file']);
+            $old = $meet?->{$key.'_path'};
+            if ($request->hasFile($key.'_file')) {
+                $data[$key.'_path'] = $request->file($key.'_file')->store('meets', 'public');
+            } elseif ($request->boolean($key.'_remove')) {
+                $data[$key.'_path'] = null;
+            }
+            if ($old && array_key_exists($key.'_path', $data) && $data[$key.'_path'] !== $old) {
+                Storage::disk('public')->delete($old);
+            }
+        }
+
+        $data['division'] = ($data['division'] ?? null) ?: '公認の部';
+
+        return $data + ['is_published' => $request->boolean('is_published')];
     }
 }
