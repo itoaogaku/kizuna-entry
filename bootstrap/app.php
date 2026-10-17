@@ -14,10 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['admin' => EnsureAdmin::class]);
-        // Vercel（テスト環境）はプロキシの後ろで動くので、https で来たことをヘッダーから受け取る
-        if (getenv('VERCEL')) {
-            $middleware->trustProxies(at: '*');
-        }
         // 決済サービスのWebhookは署名で検証するので、CSRFトークンの確認から外す
         $middleware->validateCsrfTokens(except: ['stripe/webhook', 'komoju/webhook']);
         $middleware->redirectUsersTo('/');

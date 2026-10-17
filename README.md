@@ -99,10 +99,10 @@ vendor/bin/pint --test   # コード書式
 php artisan kizuna:make-admin 運営のメールアドレス
 ```
 
-## 公開の流れ（テスト環境 → 本番）
+## 公開の流れ
 
-1. 作業ブランチに push すると、Vercel のテスト環境に自動で反映される（手順は `docs/vercel-staging.md`）。
-   Stripe・KOMOJU はテストモードで、決済から入金完了メール・領収書まで確かめられる。
-2. 確認できたら「mainを反映して」と指示 → `main` にマージ → GitHub Actions が Xserver に自動でアップロードする
-   （手順は `docs/deploy-xserver.md`）。
-3. 決済サービスと特定商取引法に基づく表記（`/legal`）の内容は `config/kizuna.php` の `receipt`・`legal`・`contact` で変えられる。
+1. 「mainを反映して」と指示 → `main` にマージ → GitHub Actions が Xserver に自動でアップロードする
+   （テスト → アップロード → データベース更新。手順は `docs/deploy-xserver.md`）。
+2. 公開前の確認は Xserver 上で、Stripe・KOMOJU を **テストモードのキー** にして行う。
+   確認できたら `.env` を本番キーと本番用 Webhook に差し替える。
+3. 特定商取引法に基づく表記（`/legal`）の内容は `config/kizuna.php` の `receipt`・`legal`・`contact` で変えられる。
