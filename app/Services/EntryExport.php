@@ -68,7 +68,7 @@ class EntryExport
             $row = $i + 2;
             $values = [
                 $i + 1,
-                $e->user->isTeam() ? $e->user->team_name : ($e->user->team_name ?: '個人'),
+                $e->user->isIndividual() ? ($e->user->team_name ?: '個人') : $e->user->displayName(),
                 $a->last_name,
                 $a->first_name,
                 $a->kana,
@@ -82,7 +82,7 @@ class EntryExport
                 $item->pr_comment,
                 $item->fee,
                 $e->id,
-                $e->user->typeLabel(),
+                $e->user->typeLabel().($e->isFromSheet() && ! $e->user->isSheetOnly() ? '（エクセル添付）' : ''),
                 $e->statusLabel(),
                 $e->paid_at?->format('Y/m/d H:i'),
                 $e->user->name,

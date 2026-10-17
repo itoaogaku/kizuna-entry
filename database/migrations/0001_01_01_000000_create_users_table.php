@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('type', 20)->default('team'); // team=団体 / individual=個人
+            $table->string('type', 20)->default('team'); // team=団体 / individual=個人 / sheet=エクセル添付のみ（ログインなし）
             $table->string('name'); // 団体：代表者氏名 / 個人：本人氏名
             $table->string('team_name')->nullable(); // 団体名（個人の場合は所属・任意）
             $table->string('login_name')->nullable()->unique(); // 団体名ログイン用（表記ゆれをそろえた団体名）

@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\TeamAuthController;
 use App\Http\Controllers\EntryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KomojuWebhookController;
+use App\Http\Controllers\SheetEntryController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,15 @@ Route::get('/', HomeController::class)->name('home');
 
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 Route::post('/komoju/webhook', KomojuWebhookController::class)->name('komoju.webhook');
+
+// エクセル添付でのエントリー（ログインなしでも使える）
+Route::get('/sheet-entry', [SheetEntryController::class, 'create'])->name('sheet.create');
+Route::post('/sheet-entry', [SheetEntryController::class, 'upload'])->middleware('throttle:20,1')->name('sheet.upload');
+Route::get('/sheet-entry/confirm', [SheetEntryController::class, 'preview'])->name('sheet.preview');
+Route::post('/sheet-entry/confirm', [SheetEntryController::class, 'store'])->name('sheet.store');
+Route::get('/sheet-entry/{entry}', [SheetEntryController::class, 'status'])->name('sheet.status');
+Route::get('/sheet-entry/{entry}/pay', [SheetEntryController::class, 'pay'])->name('sheet.pay');
+Route::get('/sheet-entry/{entry}/cancelled', [SheetEntryController::class, 'cancelled'])->name('sheet.cancelled');
 
 // ログインが必要な画面からは、最初の選択画面（団体／個人）に戻す
 Route::redirect('/login', '/')->name('login');
@@ -70,6 +80,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/events/{event}', [Admin\EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [Admin\EventController::class, 'destroy'])->name('events.destroy');
     Route::get('/meets/{meet}/entries', [Admin\EntryController::class, 'index'])->name('entries.index');
+    Route::get('/entries/{entry}/sheet', [Admin\EntryController::class, 'sheet'])->name('entries.sheet');
     Route::get('/meets/{meet}/entries.xlsx', [Admin\EntryController::class, 'export'])->name('entries.export');
     Route::get('/meets/{meet}/roster', [Admin\RosterController::class, 'index'])->name('roster.index');
     Route::put('/entry-items/{item}/best', [Admin\RosterController::class, 'updateBest'])->name('roster.best');

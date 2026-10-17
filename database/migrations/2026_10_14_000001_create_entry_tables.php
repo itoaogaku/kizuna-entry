@@ -57,6 +57,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('meet_id')->constrained()->cascadeOnDelete();
             $table->string('status')->default('pending'); // pending / paid / cancelled
+            $table->string('source', 20)->default('web'); // web=Webエントリー / sheet=エクセル添付
+            $table->string('sheet_path')->nullable(); // 添付されたエクセルの保存先
             $table->unsignedInteger('total_amount');
             $table->string('payment_method', 20)->default('card'); // card=カード（Stripe） / konbini=コンビニ（KOMOJU）
             $table->string('payment_session_id')->nullable()->unique(); // 決済ページのID

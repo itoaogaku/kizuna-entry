@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Mail\EntryPaidMail;
+use App\Mail\KonbiniPendingMail;
 use App\Models\Athlete;
 use App\Models\Entry;
 use App\Models\EntryItem;
@@ -127,9 +128,9 @@ class EntryService
      *
      * @param  Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string}>  $selections
      */
-    public function createPendingEntry(User $user, Meet $meet, Collection $selections, string $method = Entry::METHOD_CARD): Entry
+    public function createPendingEntry(User $user, Meet $meet, Collection $selections, string $method = Entry::METHOD_CARD, string $source = Entry::SOURCE_WEB): Entry
     {
-        return DB::transaction(function () use ($user, $meet, $selections, $method) {
+        return DB::transaction(function () use ($user, $meet, $selections, $method, $source) {
             $events = Event::whereIn('id', $selections->pluck('event.id')->unique())
                 ->lockForUpdate()
                 ->get()
@@ -158,6 +159,7 @@ class EntryService
                 'meet_id' => $meet->id,
                 'status' => Entry::STATUS_PENDING,
                 'payment_method' => $method,
+                'source' => $source,
                 'total_amount' => $selections->sum(fn ($s) => $events[$s['event']->id]->fee),
             ]);
 
@@ -167,6 +169,7 @@ class EntryService
                     'event_id' => $s['event']->id,
                     'declared_record' => $s['record'],
                     'pr_comment' => $s['pr'] ?? null,
+                    'personal_best' => $s['best'] ?? null, // エクセル添付で自己ベストが書かれていた場合
                     'fee' => $events[$s['event']->id]->fee,
                 ]);
             }
@@ -218,7 +221,12 @@ class EntryService
         if ($session->isPaid()) {
             $this->markPaid($entry, $session->paymentId);
         } elseif ($session->isAwaiting()) {
+            $first = $entry->payment_instructions_url === null;
             $entry->update(['payment_id' => $session->paymentId, 'payment_instructions_url' => $session->instructionsUrl]);
+            if ($first) {
+                // 払込番号が出たら、申込日のうちの支払いをお願いするメールを送る
+                Mail::to($entry->user)->send(new KonbiniPendingMail($entry->fresh()));
+            }
         } elseif ($session->isAbandoned()) {
             $this->cancelByWebhook($entry);
         }

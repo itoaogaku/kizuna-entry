@@ -24,6 +24,9 @@ class User extends Authenticatable
 
     public const TYPE_INDIVIDUAL = 'individual';
 
+    /** エクセル添付だけで申し込んだ人（ログインはしない） */
+    public const TYPE_SHEET = 'sheet';
+
     protected function casts(): array
     {
         return [
@@ -74,14 +77,23 @@ class User extends Authenticatable
     /**
      * 画面やメールに出す申込者名（団体名、個人なら本人氏名）。
      */
+    public function isSheetOnly(): bool
+    {
+        return $this->type === self::TYPE_SHEET;
+    }
+
     public function displayName(): string
     {
-        return $this->isTeam() ? (string) $this->team_name : $this->name;
+        return $this->isIndividual() ? $this->name : (string) ($this->team_name ?: $this->name);
     }
 
     public function typeLabel(): string
     {
-        return $this->isTeam() ? '団体' : '個人';
+        return match ($this->type) {
+            self::TYPE_INDIVIDUAL => '個人',
+            self::TYPE_SHEET => 'エクセル',
+            default => '団体',
+        };
     }
 
     public function athletes(): HasMany

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@hasSection('title')@yield('title') | @endif{{ config('app.name') }}</title>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=6">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=7">
 </head>
 <body>
 <header class="site">
@@ -25,6 +25,7 @@
             @else
                 <a href="{{ route('team.login') }}">団体申し込み</a>
                 <a href="{{ route('individual.login') }}">個人申し込み</a>
+                <a href="{{ route('sheet.create') }}">エクセル添付</a>
             @endauth
         </nav>
     </div>

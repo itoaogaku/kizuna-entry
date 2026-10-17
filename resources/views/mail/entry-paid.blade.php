@@ -1,4 +1,4 @@
-@if ($entry->user->isTeam())
+@if (! $entry->user->isIndividual() && $entry->user->team_name)
 {{ $entry->user->team_name }}
 @endif
 {{ $entry->user->name }} 様
@@ -16,8 +16,8 @@
 ・{{ $item->athlete->fullName() }}（{{ $item->athlete->genderLabel() }}）　{{ $item->event->name }}{{ $item->declared_record ? '　申請タイム '.$item->declared_record : '' }}　{{ number_format($item->fee) }}円
 @endforeach
 
-エントリー内容はマイページからも確認できます。
-{{ route('entries.show', $entry) }}
+エントリー内容は次のページで確認できます。
+{{ $entry->statusUrl() }}
 
 @unless ($entry->isKonbini())
 お支払いの領収書は、Stripeから別途メールでお送りしています。

@@ -23,7 +23,16 @@ class EntrySheetReader
         '種別' => 'category',
         '生年月日' => 'birthdate',
         '陸連登録番号' => 'jaaf_id',
+        // 大会の申込み欄（エクセル添付でのエントリーで使う）
+        '申込み種目' => 'event',
+        '申込種目' => 'event',
+        '申請タイム' => 'record',
+        '自己ベスト' => 'best',
+        'PRしたい一言' => 'pr',
     ];
+
+    /** シート上部の「団体名」欄に書かれていた団体名 */
+    public ?string $teamName = null;
 
     /**
      * @return array<int, array{line: int, data: array<string, ?string>}> 行番号つきの選手データ
@@ -34,6 +43,7 @@ class EntrySheetReader
             ? $this->readCsv($path)
             : $this->readSpreadsheet($path);
 
+        $this->teamName = $this->findTeamName($rows);
         [$headerIndex, $columns] = $this->findHeader($rows);
         if ($headerIndex === null) {
             throw new \RuntimeException('「姓」「名」の見出しが見つかりませんでした。エントリーシートかひな形の形式で作成してください。');
@@ -63,6 +73,32 @@ class EntrySheetReader
     }
 
     /**
+     * 「団体名」と書かれたセルの右側にある最初の値。
+     */
+    private function findTeamName(array $rows): ?string
+    {
+        foreach (array_slice($rows, 0, 8) as $row) {
+            $row = array_values($row);
+            foreach ($row as $col => $cell) {
+                if (trim((string) $cell) !== '団体名') {
+                    continue;
+                }
+                foreach (array_slice($row, $col + 1) as $value) {
+                    $value = trim((string) $value);
+                    if (in_array($value, ['合計人数', '合計料金'], true)) {
+                        break; // 団体名が空欄
+                    }
+                    if ($value !== '') {
+                        return $value;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return array{0: ?int, 1: array<int, string>}
      */
     private function findHeader(array $rows): array
@@ -70,7 +106,7 @@ class EntrySheetReader
         foreach (array_slice($rows, 0, 30, true) as $i => $row) {
             $columns = [];
             foreach ($row as $col => $cell) {
-                $label = trim(preg_split('/[\n（(]/u', (string) $cell)[0]);
+                $label = trim(preg_split('/[\n（(　 ※]/u', (string) $cell)[0]);
                 if (isset(self::HEADERS[$label]) && ! in_array(self::HEADERS[$label], $columns, true)) {
                     $columns[$col] = self::HEADERS[$label];
                 }

@@ -15,7 +15,7 @@
             <div class="actions">
                 @if ($entry->isKonbini() && $entry->payment_instructions_url)
                     <a class="btn" href="{{ $entry->payment_instructions_url }}" target="_blank" rel="noopener">払込票を開く</a>
-                    <span class="muted">期限までにコンビニでお支払いください。</span>
+                    <span class="muted"><strong>できる限りお申し込みの当日中に</strong>コンビニでお支払いください。</span>
                 @else
                 <form method="POST" action="{{ route('entries.pay', $entry) }}" class="inline-form">
                     @csrf

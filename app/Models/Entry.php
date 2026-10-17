@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\URL;
 
-#[Fillable(['meet_id', 'status', 'total_amount', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at'])]
+#[Fillable(['meet_id', 'status', 'source', 'sheet_path', 'total_amount', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at'])]
 class Entry extends Model
 {
     use HasFactory;
@@ -22,6 +23,10 @@ class Entry extends Model
     public const METHOD_CARD = 'card';
 
     public const METHOD_KONBINI = 'konbini';
+
+    public const SOURCE_WEB = 'web';
+
+    public const SOURCE_SHEET = 'sheet';
 
     public const STATUS_LABELS = [
         self::STATUS_PENDING => '決済待ち',
@@ -68,6 +73,21 @@ class Entry extends Model
     public function isKonbini(): bool
     {
         return $this->payment_method === self::METHOD_KONBINI;
+    }
+
+    public function isFromSheet(): bool
+    {
+        return $this->source === self::SOURCE_SHEET;
+    }
+
+    /**
+     * 申込者が状態を確認できるURL。エクセル添付（ログインなし）の場合は署名付きURL。
+     */
+    public function statusUrl(): string
+    {
+        return $this->isFromSheet()
+            ? URL::signedRoute('sheet.status', $this)
+            : route('entries.show', $this);
     }
 
     public function isPaid(): bool

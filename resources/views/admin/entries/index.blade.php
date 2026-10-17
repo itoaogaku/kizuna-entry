@@ -20,7 +20,14 @@
             <tbody>
             @forelse ($entries as $entry)
                 <tr>
-                    <td>{{ $entry->id }}</td>
+                    <td>{{ $entry->id }}
+                        @if ($entry->isFromSheet())
+                            <br><span class="badge">エクセル</span>
+                            @if ($entry->sheet_path)
+                                <br><a href="{{ route('admin.entries.sheet', $entry) }}">元のシート</a>
+                            @endif
+                        @endif
+                    </td>
                     <td>{{ $entry->user->displayName() }}<br><span class="muted">{{ $entry->user->typeLabel() }}{{ $entry->user->isIndividual() && $entry->user->team_name ? '・'.$entry->user->team_name : '' }}</span></td>
                     <td>{{ $entry->user->name }}<br><span class="muted">{{ $entry->user->email }} / {{ $entry->user->phone }}</span></td>
                     <td style="white-space:normal">

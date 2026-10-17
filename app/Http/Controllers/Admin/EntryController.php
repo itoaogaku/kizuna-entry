@@ -8,6 +8,7 @@ use App\Models\Meet;
 use App\Services\EntryExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -46,5 +47,15 @@ class EntryController extends Controller
         return response()->streamDownload(function () use ($book) {
             (new Xlsx($book))->save('php://output');
         }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    /**
+     * エクセル添付で申し込まれた元のファイルをダウンロードする。
+     */
+    public function sheet(Entry $entry): StreamedResponse
+    {
+        abort_unless($entry->sheet_path && Storage::exists($entry->sheet_path), 404);
+
+        return Storage::download($entry->sheet_path, '受付'.$entry->id.'_'.$entry->user->displayName().'.'.pathinfo($entry->sheet_path, PATHINFO_EXTENSION));
     }
 }
