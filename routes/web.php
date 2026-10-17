@@ -34,6 +34,7 @@ Route::post('/sheet-entry/confirm', [SheetEntryController::class, 'store'])->nam
 Route::get('/sheet-entry/{entry}', [SheetEntryController::class, 'status'])->name('sheet.status');
 Route::get('/sheet-entry/{entry}/pay', [SheetEntryController::class, 'pay'])->name('sheet.pay');
 Route::get('/sheet-entry/{entry}/cancelled', [SheetEntryController::class, 'cancelled'])->name('sheet.cancelled');
+Route::get('/sheet-entry/{entry}/receipt', [SheetEntryController::class, 'receipt'])->name('sheet.receipt');
 
 // ログインが必要な画面からは、最初の選択画面（団体／個人）に戻す
 Route::redirect('/login', '/entry')->name('login');
@@ -76,6 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/entries', [EntryController::class, 'index'])->name('entries.index');
     Route::get('/entries/{entry}', [EntryController::class, 'show'])->name('entries.show');
     Route::get('/entries/{entry}/complete', [EntryController::class, 'complete'])->name('entries.complete');
+    Route::get('/entries/{entry}/receipt', [EntryController::class, 'receipt'])->name('entries.receipt');
     Route::get('/entries/{entry}/cancelled', [EntryController::class, 'checkoutCancelled'])->name('entries.checkout-cancelled');
     Route::post('/entries/{entry}/pay', [EntryController::class, 'pay'])->name('entries.pay');
     Route::post('/entries/{entry}/cancel', [EntryController::class, 'cancel'])->name('entries.cancel');
@@ -89,6 +91,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/events/{event}', [Admin\EventController::class, 'destroy'])->name('events.destroy');
     Route::get('/meets/{meet}/entries', [Admin\EntryController::class, 'index'])->name('entries.index');
     Route::get('/entries/{entry}/sheet', [Admin\EntryController::class, 'sheet'])->name('entries.sheet');
+    Route::get('/entries/{entry}/receipt', [Admin\EntryController::class, 'receipt'])->name('entries.receipt');
+    Route::put('/entries/{entry}/receipt', [Admin\EntryController::class, 'updateReceipt'])->name('entries.receipt.update');
     Route::get('/meets/{meet}/entries.xlsx', [Admin\EntryController::class, 'export'])->name('entries.export');
     Route::get('/meets/{meet}/roster', [Admin\RosterController::class, 'index'])->name('roster.index');
     Route::put('/entry-items/{item}/best', [Admin\RosterController::class, 'updateBest'])->name('roster.best');

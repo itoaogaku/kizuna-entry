@@ -10,6 +10,10 @@
             <dt>合計金額</dt><dd>{{ number_format($entry->total_amount) }}円（{{ $entry->methodLabel() }}）</dd>
             <dt>申込日時</dt><dd>{{ $entry->created_at->format('Y/m/d H:i') }}</dd>
             @if ($entry->paid_at)<dt>入金日時</dt><dd>{{ $entry->paid_at->format('Y/m/d H:i') }}</dd>@endif
+            @if ($entry->isPaid() && $entry->receipt_number)
+                <dt>領収書</dt><dd><a class="btn small" href="{{ $entry->receiptUrl() }}" target="_blank">領収書（PDF）を表示</a>
+                    <span class="muted">No. {{ $entry->receipt_number }}・宛名 {{ $entry->receiptAddressee() }} 様</span></dd>
+            @endif
         </dl>
         @if ($entry->status === \App\Models\Entry::STATUS_PENDING)
             <div class="actions">

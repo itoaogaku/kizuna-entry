@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\URL;
 
-#[Fillable(['meet_id', 'status', 'source', 'sheet_path', 'total_amount', 'payment_fee', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at'])]
+#[Fillable(['meet_id', 'status', 'source', 'sheet_path', 'total_amount', 'payment_fee', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at', 'receipt_name', 'receipt_number'])]
 class Entry extends Model
 {
     use HasFactory;
@@ -88,6 +88,29 @@ class Entry extends Model
         return $this->isFromSheet()
             ? URL::signedRoute('sheet.status', $this)
             : route('entries.show', $this);
+    }
+
+    /**
+     * 領収書の宛名（指定がなければ団体名、個人なら氏名）。
+     */
+    public function receiptAddressee(): string
+    {
+        return $this->receipt_name ?: $this->user->displayName();
+    }
+
+    public function receiptFilename(): string
+    {
+        return '領収書_'.$this->receipt_number.'.pdf';
+    }
+
+    /**
+     * 申込者が領収書をダウンロードするURL。エクセル添付（ログインなし）の場合は署名付きURL。
+     */
+    public function receiptUrl(): string
+    {
+        return $this->isFromSheet()
+            ? URL::signedRoute('sheet.receipt', $this)
+            : route('entries.receipt', $this);
     }
 
     public function isPaid(): bool

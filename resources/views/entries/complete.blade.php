@@ -6,7 +6,8 @@
         <h1>エントリーが完了しました</h1>
         <div class="card">
             <p>{{ $entry->meet->name }}へのエントリーと入金を確認しました（受付番号 {{ $entry->id }}）。</p>
-            <p>確認メールを {{ auth()->user()->email }} にお送りしました。</p>
+            <p>確認メールを {{ auth()->user()->email }} にお送りしました。領収書（PDF）も添付しています。</p>
+            <a class="btn secondary" href="{{ $entry->receiptUrl() }}" target="_blank">領収書（PDF）を表示</a>
         </div>
     @elseif ($entry->isKonbini() && $entry->payment_instructions_url)
         @include('partials.konbini-awaiting', ['entry' => $entry])

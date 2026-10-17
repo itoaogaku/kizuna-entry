@@ -6,10 +6,13 @@ use App\Models\Entry;
 use App\Models\Meet;
 use App\Payments\PaymentGateways;
 use App\Services\EntryService;
+use App\Services\ReceiptPdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class EntryController extends Controller
 {
@@ -103,6 +106,7 @@ class EntryController extends Controller
         return view('entries.confirm', [
             'meet' => $meet,
             'methods' => PaymentGateways::available(),
+            'receiptDefault' => $request->user()->displayName(),
             'selections' => $selections,
             'total' => $selections->sum('fee'),
         ]);
@@ -136,6 +140,7 @@ class EntryController extends Controller
             return redirect()->route('entries.create', $meet)->withErrors($e->errors());
         }
         $request->session()->forget("entry_draft.{$meet->id}");
+        $entry->update(['receipt_name' => $this->receiptName($request)]);
 
         return $this->redirectToCheckout($entry);
     }
@@ -255,6 +260,11 @@ class EntryController extends Controller
             ->with('status', 'お支払いを中止しました。内容を確認して、もう一度お申し込みください。');
     }
 
+    private function receiptName(Request $request): ?string
+    {
+        return mb_substr(trim((string) $request->input('receipt_name')), 0, 100) ?: null;
+    }
+
     private function rejectIfClosed(Meet $meet): ?RedirectResponse
     {
         if ($meet->isAcceptingEntries()) {
@@ -267,5 +277,19 @@ class EntryController extends Controller
     private function authorizeOwner(Request $request, Entry $entry): void
     {
         abort_unless($entry->user_id === $request->user()->id, 404);
+    }
+
+    /**
+     * 領収書（PDF）のダウンロード。入金済みのエントリーだけ。
+     */
+    public function receipt(Request $request, Entry $entry): Response
+    {
+        $this->authorizeOwner($request, $entry);
+        abort_unless($entry->isPaid() && $entry->receipt_number, 404);
+
+        return response(app(ReceiptPdf::class)->render($entry), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => HeaderUtils::makeDisposition('inline', $entry->receiptFilename(), 'receipt-'.$entry->receipt_number.'.pdf'),
+        ]);
     }
 }

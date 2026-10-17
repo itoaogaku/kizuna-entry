@@ -7,14 +7,17 @@ use App\Models\Meet;
 use App\Models\User;
 use App\Payments\PaymentGateways;
 use App\Services\EntryService;
+use App\Services\ReceiptPdf;
 use App\Services\SheetEntryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 /**
  * エクセル添付でのエントリー（ログインなしでも使える）。
@@ -110,6 +113,7 @@ class SheetEntryController extends Controller
             'valid' => $valid,
             'total' => collect($parsed['rows'])->sum('fee'),
             'methods' => PaymentGateways::available(),
+            'receiptDefault' => $request->user()?->displayName() ?? ($draft['team_name'] ?: $draft['name']),
         ]);
     }
 
@@ -146,7 +150,10 @@ class SheetEntryController extends Controller
         // 添付されたエクセルは運営が後から見られるように残す
         $saved = 'sheets/entry-'.$entry->id.'.'.strtolower($draft['extension']);
         Storage::move($draft['path'], $saved);
-        $entry->update(['sheet_path' => $saved]);
+        $entry->update([
+            'sheet_path' => $saved,
+            'receipt_name' => mb_substr(trim((string) $request->input('receipt_name')), 0, 100) ?: null,
+        ]);
         $request->session()->forget(self::DRAFT);
 
         try {
@@ -233,5 +240,19 @@ class SheetEntryController extends Controller
         ])->save();
 
         return $user;
+    }
+
+    /**
+     * 領収書（PDF）のダウンロード。入金済みのエントリーだけ。
+     */
+    public function receipt(Request $request, Entry $entry): Response
+    {
+        $this->checkSignature($request);
+        abort_unless($entry->isPaid() && $entry->receipt_number, 404);
+
+        return response(app(ReceiptPdf::class)->render($entry), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => HeaderUtils::makeDisposition('inline', $entry->receiptFilename(), 'receipt-'.$entry->receipt_number.'.pdf'),
+        ]);
     }
 }

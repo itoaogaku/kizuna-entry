@@ -83,6 +83,8 @@ return new class extends Migration
             $table->string('payment_id')->nullable(); // 決済のID（Stripe PaymentIntent / KOMOJU Payment）
             $table->string('payment_instructions_url')->nullable(); // コンビニ払いの払込票URL
             $table->timestamp('paid_at')->nullable();
+            $table->string('receipt_name')->nullable(); // 領収書の宛名
+            $table->string('receipt_number')->nullable()->unique(); // 領収書番号（入金時に付ける）
             $table->timestamps();
         });
 

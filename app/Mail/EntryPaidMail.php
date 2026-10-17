@@ -3,8 +3,10 @@
 namespace App\Mail;
 
 use App\Models\Entry;
+use App\Services\ReceiptPdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -28,5 +30,16 @@ class EntryPaidMail extends Mailable
     public function content(): Content
     {
         return new Content(text: 'mail.entry-paid');
+    }
+
+    /**
+     * 領収書（PDF）を添付する。
+     */
+    public function attachments(): array
+    {
+        return [
+            Attachment::fromData(fn () => app(ReceiptPdf::class)->render($this->entry), $this->entry->receiptFilename())
+                ->withMime('application/pdf'),
+        ];
     }
 }

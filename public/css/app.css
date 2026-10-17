@@ -348,3 +348,6 @@ input[type=time] { padding: 6px 8px; font: inherit; border: 1px solid var(--bord
 .doc-card .row { margin-top: 12px; }
 .doc-card details input { margin-top: 6px; }
 a.badge { text-decoration: none; }
+
+.receipt-form { display: flex; gap: 4px; margin-top: 4px; }
+.receipt-form input[type=text] { min-width: 0; width: 140px; padding: 3px 6px; font-size: .85rem; }

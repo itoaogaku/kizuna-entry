@@ -11,6 +11,14 @@ return [
         'home_url' => env('KIZUNA_HOME_URL', 'https://acckizuna.com/'),
     ],
 
+    // 領収書（入金が完了したら自動で発行し、入金完了メールに添付する）
+    'receipt' => [
+        'issuer' => env('KIZUNA_RECEIPT_ISSUER', 'アスリートキャリアセンター絆ランニング倶楽部'),
+        // 適格請求書発行事業者の登録番号（例：T1234567890123）。入れると領収書に登録番号と消費税額（10%・内税）を載せる
+        'registration_number' => env('KIZUNA_INVOICE_NUMBER'),
+        'tax_rate' => 10,
+    ],
+
     // 最小遂行人数（これに満たないレースはプログラム作成画面で知らせる）
     'min_participants' => 3,
 

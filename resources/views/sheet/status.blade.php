@@ -4,7 +4,8 @@
 @section('content')
     @if ($entry->isPaid())
         <h1>エントリーが完了しました</h1>
-        <div class="card"><p>{{ $entry->meet->name }}へのエントリーと入金を確認しました（受付番号 {{ $entry->id }}）。確認メールを {{ $entry->user->email }} にお送りしました。</p></div>
+        <div class="card"><p>{{ $entry->meet->name }}へのエントリーと入金を確認しました（受付番号 {{ $entry->id }}）。確認メールを {{ $entry->user->email }} にお送りしました。領収書（PDF）も添付しています。</p>
+            @if ($entry->receipt_number)<a class="btn secondary" href="{{ $entry->receiptUrl() }}" target="_blank">領収書（PDF）を表示</a>@endif</div>
     @elseif ($entry->status === \App\Models\Entry::STATUS_CANCELLED)
         <h1>このお申し込みは取り消されています</h1>
         <div class="card">

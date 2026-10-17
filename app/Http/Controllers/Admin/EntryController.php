@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Entry;
 use App\Models\Meet;
 use App\Services\EntryExport;
+use App\Services\ReceiptPdf;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EntryController extends Controller
@@ -57,5 +61,29 @@ class EntryController extends Controller
         abort_unless($entry->sheet_path && Storage::exists($entry->sheet_path), 404);
 
         return Storage::download($entry->sheet_path, '受付'.$entry->id.'_'.$entry->user->displayName().'.'.pathinfo($entry->sheet_path, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * 領収書（PDF）のダウンロード。入金済みのエントリーだけ。
+     */
+    public function receipt(Request $request, Entry $entry): Response
+    {
+        abort_unless($entry->isPaid() && $entry->receipt_number, 404);
+
+        return response(app(ReceiptPdf::class)->render($entry), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => HeaderUtils::makeDisposition('inline', $entry->receiptFilename(), 'receipt-'.$entry->receipt_number.'.pdf'),
+        ]);
+    }
+
+    /**
+     * 領収書の宛名を直す（申込者から依頼があったときなど）。番号は変えずに作り直す。
+     */
+    public function updateReceipt(Request $request, Entry $entry): RedirectResponse
+    {
+        $data = $request->validate(['receipt_name' => ['nullable', 'string', 'max:100']], [], ['receipt_name' => '領収書の宛名']);
+        $entry->update(['receipt_name' => $data['receipt_name'] ?: null]);
+
+        return back()->with('status', '受付番号'.$entry->id.'の領収書の宛名を「'.$entry->receiptAddressee().'」にしました。');
     }
 }

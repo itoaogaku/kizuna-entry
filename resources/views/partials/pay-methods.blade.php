@@ -19,6 +19,10 @@
             @endforeach
         </div>
     </div>
+    <div class="field">
+        <label for="receipt_name">領収書の宛名 <span class="hint">（入金が完了すると、領収書（PDF）を自動で発行してメールに添付します）</span></label>
+        <input id="receipt_name" type="text" name="receipt_name" value="{{ old('receipt_name', $receiptDefault ?? '') }}" maxlength="100" placeholder="例：絆陸上クラブ">
+    </div>
     <div class="field terms">
         <label class="inline"><input type="checkbox" name="terms" value="1" @checked(old('terms')) required>
             参加者全員が{{ \App\Services\GradeAdvance::fiscalYear() }}年度の日本陸上競技連盟の競技者登録を済ませています。また、申込み後は理由の如何に関わらず参加料がかかることに同意します。</label>

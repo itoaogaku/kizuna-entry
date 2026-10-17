@@ -19,9 +19,9 @@
 エントリー内容は次のページで確認できます。
 {{ $entry->statusUrl() }}
 
-@unless ($entry->isKonbini())
-お支払いの領収書は、Stripeから別途メールでお送りしています。
-@endunless
+領収書（PDF）をこのメールに添付しています（宛名：{{ $entry->receiptAddressee() }} 様）。
+次のページからもダウンロードできます。
+{{ $entry->receiptUrl() }}
 
 ――――――――――――――――
 {{ config('app.name') }}

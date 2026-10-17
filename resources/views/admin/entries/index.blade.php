@@ -16,7 +16,7 @@
 
     <div class="table-wrap">
         <table>
-            <thead><tr><th>受付番号</th><th>所属</th><th>代表者</th><th>内容</th><th class="num">金額</th><th>状態</th><th>入金日時</th><th>支払い方法</th></tr></thead>
+            <thead><tr><th>受付番号</th><th>所属</th><th>代表者</th><th>内容</th><th class="num">金額</th><th>状態</th><th>入金日時</th><th>支払い方法</th><th>領収書</th></tr></thead>
             <tbody>
             @forelse ($entries as $entry)
                 <tr>
@@ -46,9 +46,19 @@
                             <span class="muted">KOMOJU {{ $entry->payment_id }}</span>
                         @endif
                     </td>
+                    <td>
+                        @if ($entry->isPaid() && $entry->receipt_number)
+                            <a href="{{ route('admin.entries.receipt', $entry) }}" target="_blank">No. {{ $entry->receipt_number }}</a>
+                            <form method="POST" action="{{ route('admin.entries.receipt.update', $entry) }}" class="receipt-form">
+                                @csrf @method('PUT')
+                                <input type="text" name="receipt_name" value="{{ $entry->receipt_name }}" placeholder="{{ $entry->user->displayName() }}" aria-label="領収書の宛名">
+                                <button class="btn small secondary" type="submit">宛名を変更</button>
+                            </form>
+                        @endif
+                    </td>
                 </tr>
             @empty
-                <tr><td colspan="8">該当するエントリーはありません。</td></tr>
+                <tr><td colspan="9">該当するエントリーはありません。</td></tr>
             @endforelse
             </tbody>
         </table>
