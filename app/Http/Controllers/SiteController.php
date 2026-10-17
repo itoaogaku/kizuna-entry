@@ -28,6 +28,28 @@ class SiteController extends Controller
             // 大会ごとの詳細は新しい順（今のサイトと同じ並び）
             'details' => $meets->sortByDesc('held_on')->values(),
             'next' => $published->first(fn (Meet $m) => $m->stage() !== 'finished'),
+            'pastResults' => $this->pastResults($years, $current),
         ]);
+    }
+
+    /**
+     * 過去の大会結果へのリンク（年度の古い順）。設定にURLがあればそれ、なければこのページのその年度。
+     *
+     * @return array<int, string>
+     */
+    private function pastResults($years, int $current): array
+    {
+        $links = [];
+        foreach ((array) config('kizuna.past_results') as $y => $url) {
+            $links[(int) $y] = $url ?: route('site.meets', ['year' => $y]).'#schedule';
+        }
+        foreach ($years as $y) {
+            if ($y < $current && ! isset($links[$y])) {
+                $links[$y] = route('site.meets', ['year' => $y]).'#schedule';
+            }
+        }
+        ksort($links);
+
+        return $links;
     }
 }

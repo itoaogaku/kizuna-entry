@@ -123,6 +123,20 @@
         </section>
     @endif
 
+    @if ($pastResults)
+        <section class="past">
+            <p class="section-eyebrow">ARCHIVE</p>
+            <h2 class="section-title">過去の大会結果</h2>
+            <div class="year-links">
+                @foreach ($pastResults as $y => $url)
+                    <a href="{{ $url }}" @if (! str_starts_with($url, url('/'))) target="_blank" rel="noopener" @endif>
+                        <span class="y">{{ $y }}</span><span class="t">年度の結果</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <section class="cta">
         <div>
             <h2>エントリー方法は2通り</h2>

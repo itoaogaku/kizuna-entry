@@ -51,6 +51,10 @@ class SiteTest extends TestCase
             ->assertSee('写真館')
             ->assertSee('NEXT RACE')
             ->assertSee(route('home'))
+            ->assertSee('過去の大会結果')
+            ->assertSee(route('site.meets', ['year' => 2021]).'#schedule', false)
+            ->assertSee('info@acckizuna.com')
+            ->assertSee('042-722-2930')
             ->assertDontSee('非公開の大会')
             ->assertDontSee('前年度の大会');
 
