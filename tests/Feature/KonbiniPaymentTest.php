@@ -61,7 +61,7 @@ class KonbiniPaymentTest extends TestCase
         $this->actingAs($this->team)->get(route('entries.confirm', $this->meet))
             ->assertSee('コンビニ払い')
             ->assertSee('クレジットカード');
-        $response = $this->actingAs($this->team)->post(route('entries.store', $this->meet), ['payment_method' => 'konbini']);
+        $response = $this->actingAs($this->team)->post(route('entries.store', $this->meet), ['payment_method' => 'konbini', 'terms' => '1']);
         $entry = Entry::sole();
         $response->assertRedirect('https://checkout.example.test/'.$entry->payment_session_id);
 
@@ -149,7 +149,7 @@ class KonbiniPaymentTest extends TestCase
         ]]);
 
         $this->actingAs($this->team)->get(route('entries.confirm', $this->meet))->assertDontSee('コンビニ払い');
-        $this->actingAs($this->team)->post(route('entries.store', $this->meet), ['payment_method' => 'konbini'])
+        $this->actingAs($this->team)->post(route('entries.store', $this->meet), ['payment_method' => 'konbini', 'terms' => '1'])
             ->assertSessionHasErrors('payment_method');
         $this->assertDatabaseCount('entries', 0);
     }

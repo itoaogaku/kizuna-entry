@@ -59,7 +59,7 @@ class DatabaseSeeder extends Seeder
             ['第17回絆記録挑戦会', '2026-04-04', '高校生・大学生・一般', [['800m', 'M'], ['1500m', null], ['3000m', null], ['3000mSC', 'M'], ['5000m', 'M']]],
             ['第18回絆記録挑戦会', '2026-05-17', '中学生・高校生・大学生・一般', [['3000m', null], ['5000m', 'M']]],
             ['第19回絆記録挑戦会', '2026-06-27', '中学生・高校生・大学生・一般', [['3000m', null], ['5000m', null]]],
-            ['第20回絆記録挑戦会', '2026-09-26', '中学生・高校生・大学生・一般', [['1500m', null], ['3000m', null], ['5000m', null], ['10000m', 'M']]],
+            ['第20回絆記録挑戦会', '2026-09-26', '中学生の部、高校生・大学生・一般の部', [['10000m', 'M'], ['5000m', null], ['3000m', null], ['1500m', null]]],
         ];
         $fees = ['800m' => 2000, '1500m' => 2000, '3000m' => 2000, '3000mSC' => 2200, '5000m' => 2200, '10000m' => 2500];
         foreach ($pastMeets as [$name, $date, $eligible, $eventList]) {
@@ -68,6 +68,7 @@ class DatabaseSeeder extends Seeder
                 'entry_opens_at' => now()->parse($date)->subMonths(2), 'entry_closes_at' => now()->parse($date)->subWeeks(2),
                 'outline_url' => $site, 'program_url' => $site, 'result_url' => $site, 'photo_url' => $site,
                 'program_note' => $name === '第19回絆記録挑戦会' ? '0628更新' : null,
+                'start_time' => '15:30',
             ]);
             foreach ($eventList as $i => [$eventName, $gender]) {
                 $past->events()->create(['name' => $eventName, 'gender' => $gender, 'fee' => $fees[$eventName], 'sort_order' => ($i + 1) * 10]);
@@ -78,15 +79,21 @@ class DatabaseSeeder extends Seeder
         $meet = Meet::factory()->create([
             'name' => '第21回絆記録挑戦会',
             'held_on' => now()->addMonth()->toDateString(),
-            'eligible' => '中学生・高校生・大学生・一般',
+            'eligible' => '中学生の部、高校生・大学生・一般の部',
+            'start_time' => '15:30',
+            // 大会要項の参加料（1種目ごと）
+            'fee_junior_high' => 1500,
+            'fee_student' => 2200,
+            'fee_general' => 3300,
             'outline_url' => $site,
             'notes' => "料金は1種目ごとにかかります。お支払い後の返金はできません。\n組変更希望は、暫定版スタートリスト掲載後に組変更希望用紙で受け付けます。",
         ]);
+        // 種目の料金は区分別の参加料を使うので 0
         $events = [
-            ['1500m', null, 2000, 80],
-            ['3000m', null, 2000, 80],
-            ['5000m', null, 2200, 120],
-            ['10000m', 'M', 2500, 60],
+            ['10000m', 'M', 0, 60],
+            ['5000m', null, 0, 120],
+            ['3000m', null, 0, 80],
+            ['1500m', null, 0, 80],
         ];
         foreach ($events as $i => [$name, $gender, $fee, $capacity]) {
             $meet->events()->create([
@@ -105,11 +112,12 @@ class DatabaseSeeder extends Seeder
             [$other, Athlete::factory()->for($other)->create(['last_name' => '小林', 'first_name' => '蓮', 'kana' => 'コバヤシ レン', 'category' => '高校生', 'grade' => 2, 'association' => '埼玉']), "15'05", null, null],
         ];
         foreach ($demo as [$owner, $athlete, $target, $best, $pr]) {
+            $fee = $meet->feeFor($athlete->category, $five);
             $entry = $owner->entries()->create([
-                'meet_id' => $meet->id, 'status' => 'paid', 'total_amount' => $five->fee, 'paid_at' => now(),
+                'meet_id' => $meet->id, 'status' => 'paid', 'total_amount' => $fee, 'paid_at' => now(),
             ]);
             $entry->items()->create([
-                'athlete_id' => $athlete->id, 'event_id' => $five->id, 'fee' => $five->fee,
+                'athlete_id' => $athlete->id, 'event_id' => $five->id, 'fee' => $fee,
                 'declared_record' => $target, 'personal_best' => $best, 'pr_comment' => $pr,
             ]);
         }
@@ -118,6 +126,10 @@ class DatabaseSeeder extends Seeder
         $next = Meet::factory()->create([
             'name' => '第22回絆記録挑戦会',
             'held_on' => now()->addMonths(3)->toDateString(),
+            'start_time' => '15:30',
+            'fee_junior_high' => 1500,
+            'fee_student' => 2200,
+            'fee_general' => 3300,
             'eligible' => '中学生・高校生・大学生・一般',
             'entry_opens_at' => now()->addMonth(),
             'entry_closes_at' => now()->addMonths(2),

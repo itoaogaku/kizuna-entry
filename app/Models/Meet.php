@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
     'division', 'eligible', 'outline_url', 'outline_path', 'program_url', 'program_path', 'program_note',
     'result_url', 'result_path', 'photo_url', 'press_url',
     'start_list_status', 'start_list_published_at', 'program_notes',
+    'start_time', 'fee_junior_high', 'fee_student', 'fee_general',
 ])]
 class Meet extends Model
 {
@@ -48,6 +49,49 @@ class Meet extends Model
     public const START_LIST_PROVISIONAL = 'provisional';
 
     public const START_LIST_FINAL = 'final';
+
+    /** 区分別の参加料の表示名 */
+    public const FEE_LABELS = ['fee_junior_high' => '中学生', 'fee_student' => '高校生・大学生', 'fee_general' => '一般・実業団'];
+
+    /**
+     * 区分別の参加料が設定されているか（要項の「中学生1,500円・高校生大学生2,200円・一般3,300円」の形）。
+     */
+    public function hasCategoryFees(): bool
+    {
+        return $this->fee_junior_high !== null || $this->fee_student !== null || $this->fee_general !== null;
+    }
+
+    /**
+     * 選手の種別と種目から、その選手の参加料を決める。区分別の参加料がなければ種目の料金。
+     */
+    public function feeFor(?string $category, Event $event): int
+    {
+        if (! $this->hasCategoryFees()) {
+            return (int) $event->fee;
+        }
+        $fee = match ($category) {
+            '中学生' => $this->fee_junior_high,
+            '高校生', '大学生' => $this->fee_student,
+            default => $this->fee_general,
+        };
+
+        return (int) ($fee ?? $event->fee);
+    }
+
+    /**
+     * 部門：中学生は「中学生の部」、それ以外は「高校生・大学生・一般の部」。組分けはこの部門ごとに分ける。
+     */
+    public static function divisionOf(?string $category): string
+    {
+        return $category === '中学生' ? 'junior' : 'open';
+    }
+
+    public const DIVISION_LABELS = ['junior' => '中学生の部', 'open' => '高校生・大学生・一般の部'];
+
+    public function startTimeLabel(): ?string
+    {
+        return $this->start_time ? ltrim(substr($this->start_time, 0, 5), '0') : null;
+    }
 
     public function races(): HasMany
     {

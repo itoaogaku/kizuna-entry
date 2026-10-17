@@ -10,6 +10,8 @@
             <dt>受付期間</dt><dd>{{ $meet->entry_opens_at->format('Y/m/d H:i') }} 〜 {{ $meet->entry_closes_at->format('Y/m/d H:i') }}</dd>
             <dt>公開</dt><dd>{{ $meet->is_published ? '公開' : '非公開' }}{{ $meet->isAcceptingEntries() ? '（受付中）' : '' }}</dd>
             <dt>最大種目数</dt><dd>1人{{ $meet->max_events_per_athlete }}種目</dd>
+            @if ($meet->startTimeLabel())<dt>競技開始</dt><dd>{{ $meet->startTimeLabel() }} 予定</dd>@endif
+            <dt>参加料</dt><dd>@if ($meet->hasCategoryFees())@foreach (\App\Models\Meet::FEE_LABELS as $key => $label){{ $label }} {{ $meet->{$key} !== null ? number_format($meet->{$key}).'円' : '―' }}{{ $loop->last ? '' : '／' }}@endforeach （1種目ごと） @else 種目ごとの料金 @endif</dd>
         </dl>
         <div class="actions">
             <a class="btn secondary" href="{{ route('admin.meets.edit', $meet) }}">大会情報を編集</a>
@@ -44,7 +46,7 @@
                             <option value="F" @selected($event->gender === 'F')>女子</option>
                         </select>
                     </td>
-                    <td><input form="event-{{ $event->id }}" type="number" name="fee" value="{{ $event->fee }}" min="50" style="width:100px" required></td>
+                    <td><input form="event-{{ $event->id }}" type="number" name="fee" value="{{ $event->fee ?: '' }}" min="0" style="width:100px" @unless ($meet->hasCategoryFees()) required @endunless placeholder="{{ $meet->hasCategoryFees() ? '区分別' : '' }}"></td>
                     <td><input form="event-{{ $event->id }}" type="number" name="capacity" value="{{ $event->capacity }}" min="1" style="width:90px"></td>
                     <td class="num">{{ $reserved[$event->id] }}</td>
                     <td>
@@ -63,7 +65,7 @@
                         <option value="F">女子</option>
                     </select>
                 </td>
-                <td><input form="event-new" type="number" name="fee" min="50" style="width:100px" required></td>
+                <td><input form="event-new" type="number" name="fee" min="0" style="width:100px" @unless ($meet->hasCategoryFees()) required @endunless placeholder="{{ $meet->hasCategoryFees() ? '区分別' : '' }}"></td>
                 <td><input form="event-new" type="number" name="capacity" min="1" style="width:90px"></td>
                 <td></td>
                 <td><button form="event-new" class="btn small" type="submit">追加</button></td>

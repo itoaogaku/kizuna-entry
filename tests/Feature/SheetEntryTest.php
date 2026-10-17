@@ -114,7 +114,7 @@ class SheetEntryTest extends TestCase
             ->assertSee('6,400円')
             ->assertSee('この内容で支払いへ進む');
 
-        $response = $this->post(route('sheet.store'), ['payment_method' => 'card']);
+        $response = $this->post(route('sheet.store'), ['payment_method' => 'card', 'terms' => '1']);
         $entry = Entry::sole();
         $response->assertRedirect('https://checkout.example.test/'.$entry->payment_session_id);
 
@@ -144,7 +144,7 @@ class SheetEntryTest extends TestCase
     public function test_status_page_requires_the_signed_link(): void
     {
         $this->upload($this->goodRows());
-        $this->post(route('sheet.store'), ['payment_method' => 'card']);
+        $this->post(route('sheet.store'), ['payment_method' => 'card', 'terms' => '1']);
 
         $this->get(route('sheet.status', Entry::sole()))->assertForbidden();
     }
@@ -161,7 +161,7 @@ class SheetEntryTest extends TestCase
             ->assertSee('申請タイムが空欄です')
             ->assertDontSee('この内容で支払いへ進む');
 
-        $this->post(route('sheet.store'), ['payment_method' => 'card'])->assertRedirect(route('sheet.preview'));
+        $this->post(route('sheet.store'), ['payment_method' => 'card', 'terms' => '1'])->assertRedirect(route('sheet.preview'));
         $this->assertDatabaseCount('entries', 0);
     }
 
@@ -181,7 +181,7 @@ class SheetEntryTest extends TestCase
             'meet_id' => $this->meet->id,
             'file' => $this->sheet($this->goodRows()),
         ])->assertRedirect(route('sheet.preview'));
-        $this->actingAs($team)->post(route('sheet.store'), ['payment_method' => 'card']);
+        $this->actingAs($team)->post(route('sheet.store'), ['payment_method' => 'card', 'terms' => '1']);
 
         $entry = Entry::sole();
         $this->assertSame($team->id, $entry->user_id);
@@ -192,7 +192,7 @@ class SheetEntryTest extends TestCase
     public function test_konbini_payment_sends_a_same_day_request_once(): void
     {
         $this->upload($this->goodRows());
-        $this->post(route('sheet.store'), ['payment_method' => 'konbini']);
+        $this->post(route('sheet.store'), ['payment_method' => 'konbini', 'terms' => '1']);
         $entry = Entry::sole();
 
         $this->konbini->markAwaiting($entry->payment_session_id, 'https://komoju.test/slip');

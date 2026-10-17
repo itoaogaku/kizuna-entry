@@ -34,6 +34,11 @@ return new class extends Migration
             $table->dateTime('entry_opens_at');
             $table->dateTime('entry_closes_at');
             $table->unsignedInteger('max_events_per_athlete')->default(2);
+            $table->time('start_time')->nullable(); // 競技開始予定時刻
+            // 区分別の参加料（入っていれば種目の料金より優先）。中学生 / 高校生・大学生 / 一般・実業団
+            $table->unsignedInteger('fee_junior_high')->nullable();
+            $table->unsignedInteger('fee_student')->nullable();
+            $table->unsignedInteger('fee_general')->nullable();
             $table->boolean('is_published')->default(false);
             $table->text('notes')->nullable();
             // 大会開催ページに出す内容
@@ -57,7 +62,7 @@ return new class extends Migration
             $table->foreignId('meet_id')->constrained()->cascadeOnDelete();
             $table->string('name'); // 例：一般男子5000m
             $table->string('gender', 1)->nullable(); // M / F / null=男女共通
-            $table->unsignedInteger('fee'); // 1人あたりの参加費（円）
+            $table->unsignedInteger('fee')->default(0); // 1人あたりの参加費（円）。大会の区分別参加料があればそちらを使う
             $table->unsignedInteger('capacity')->nullable(); // 定員（null=無制限）
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
@@ -72,6 +77,7 @@ return new class extends Migration
             $table->string('source', 20)->default('web'); // web=Webエントリー / sheet=エクセル添付
             $table->string('sheet_path')->nullable(); // 添付されたエクセルの保存先
             $table->unsignedInteger('total_amount');
+            $table->unsignedInteger('payment_fee')->default(0); // コンビニ払いの手数料（合計金額に含む）
             $table->string('payment_method', 20)->default('card'); // card=カード（Stripe） / konbini=コンビニ（KOMOJU）
             $table->string('payment_session_id')->nullable()->unique(); // 決済ページのID
             $table->string('payment_id')->nullable(); // 決済のID（Stripe PaymentIntent / KOMOJU Payment）

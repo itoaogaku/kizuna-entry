@@ -84,6 +84,7 @@ class SheetEntryService
                 'record' => $record,
                 'best' => $best,
                 'pr' => $pr === '' ? null : mb_substr($pr, 0, 100),
+                'fee' => $event ? $meet->feeFor($athlete['category'] ?? null, $event) : 0,
                 'errors' => $errors,
             ];
         }
@@ -124,6 +125,7 @@ class SheetEntryService
             'record' => $row['record'],
             'best' => $row['best'],
             'pr' => $row['pr'],
+            'fee' => $row['fee'],
         ]);
 
         $entry = $this->entries->createPendingEntry($user, $meet, $selections, $method, Entry::SOURCE_SHEET);

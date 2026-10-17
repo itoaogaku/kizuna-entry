@@ -53,7 +53,7 @@ class EntryFlowTest extends TestCase
     {
         $this->actingAs($this->team)->post(route('entries.review', $this->meet), ['items' => $items]);
 
-        return $this->actingAs($this->team)->post(route('entries.store', $this->meet));
+        return $this->actingAs($this->team)->post(route('entries.store', $this->meet), ['terms' => '1']);
     }
 
     public function test_only_own_active_athletes_are_listed(): void
@@ -85,7 +85,7 @@ class EntryFlowTest extends TestCase
             ->assertOk()
             ->assertSee('3,500円');
 
-        $response = $this->actingAs($this->team)->post(route('entries.store', $this->meet));
+        $response = $this->actingAs($this->team)->post(route('entries.store', $this->meet), ['terms' => '1']);
 
         $entry = Entry::sole();
         $this->assertSame(Entry::STATUS_PENDING, $entry->status);
@@ -228,7 +228,7 @@ class EntryFlowTest extends TestCase
         $this->actingAs($solo)->post(route('entries.review', $this->meet), ['items' => [
             $me->id => ['selected' => '1', 'events' => [['event_id' => $this->men5000->id, 'record' => "15'00"]]],
         ]])->assertRedirect(route('entries.confirm', $this->meet));
-        $this->actingAs($solo)->post(route('entries.store', $this->meet));
+        $this->actingAs($solo)->post(route('entries.store', $this->meet), ['terms' => '1']);
 
         $this->assertSame($solo->id, Entry::sole()->user_id);
     }

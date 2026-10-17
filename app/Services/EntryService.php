@@ -26,7 +26,7 @@ class EntryService
      * フォームの入力（選手ごとの種目選択）を検証し、明細の一覧に変換する。
      *
      * @param  array<int|string, array{selected?: mixed, pr?: mixed, events?: array<int, array{event_id?: mixed, record?: mixed}>}>  $input
-     * @return Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string}>
+     * @return Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string, fee: int}>
      */
     public function buildSelections(User $user, Meet $meet, array $input): Collection
     {
@@ -109,6 +109,7 @@ class EntryService
                     'event' => $event,
                     'record' => $record,
                     'pr' => $pr === '' ? null : $pr,
+                    'fee' => $meet->feeFor($athlete->category, $event),
                 ]);
             }
         }
@@ -126,7 +127,7 @@ class EntryService
     /**
      * 決済待ちのエントリーを作成する。定員はここで最終確認する。
      *
-     * @param  Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string}>  $selections
+     * @param  Collection<int, array{athlete: Athlete, event: Event, record: string, pr: ?string, fee: int}>  $selections
      */
     public function createPendingEntry(User $user, Meet $meet, Collection $selections, string $method = Entry::METHOD_CARD, string $source = Entry::SOURCE_WEB): Entry
     {
@@ -155,27 +156,38 @@ class EntryService
                 }
             }
 
+            $fees = $selections->map(fn ($s) => $s['fee'] ?? $meet->feeFor($s['athlete']->category, $events[$s['event']->id]));
+            $paymentFee = self::paymentFee($method);
             $entry = $user->entries()->create([
                 'meet_id' => $meet->id,
                 'status' => Entry::STATUS_PENDING,
                 'payment_method' => $method,
                 'source' => $source,
-                'total_amount' => $selections->sum(fn ($s) => $events[$s['event']->id]->fee),
+                'payment_fee' => $paymentFee,
+                'total_amount' => $fees->sum() + $paymentFee,
             ]);
 
-            foreach ($selections as $s) {
+            foreach ($selections->values() as $i => $s) {
                 $entry->items()->create([
                     'athlete_id' => $s['athlete']->id,
                     'event_id' => $s['event']->id,
                     'declared_record' => $s['record'],
                     'pr_comment' => $s['pr'] ?? null,
                     'personal_best' => $s['best'] ?? null, // エクセル添付で自己ベストが書かれていた場合
-                    'fee' => $events[$s['event']->id]->fee,
+                    'fee' => $fees->values()[$i],
                 ]);
             }
 
             return $entry;
         });
+    }
+
+    /**
+     * 支払い方法ごとの手数料（コンビニ払いは KOMOJU_FEE で設定した額）。
+     */
+    public static function paymentFee(string $method): int
+    {
+        return $method === Entry::METHOD_KONBINI ? (int) config('services.komoju.fee', 0) : 0;
     }
 
     /**

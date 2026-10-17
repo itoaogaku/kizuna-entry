@@ -108,7 +108,7 @@ class SheetEntryController extends Controller
             'draft' => $draft,
             'rows' => $parsed['rows'],
             'valid' => $valid,
-            'total' => collect($parsed['rows'])->sum(fn ($r) => $r['event']?->fee ?? 0),
+            'total' => collect($parsed['rows'])->sum('fee'),
             'methods' => PaymentGateways::available(),
         ]);
     }
@@ -122,6 +122,9 @@ class SheetEntryController extends Controller
         $meet = Meet::findOrFail($draft['meet_id']);
         if (! $meet->isAcceptingEntries()) {
             return redirect()->route('sheet.create')->withErrors(['meet_id' => $meet->name.'は現在エントリーを受け付けていません。']);
+        }
+        if (! $request->boolean('terms')) {
+            return redirect()->route('sheet.preview')->withErrors(['terms' => '競技者登録と参加料についての確認にチェックを入れてください。']);
         }
         $method = (string) $request->input('payment_method', Entry::METHOD_CARD);
         if (! array_key_exists($method, PaymentGateways::available())) {

@@ -25,14 +25,14 @@ class StripePaymentGateway implements PaymentGateway
     {
         $entry->loadMissing('items.event', 'meet', 'user');
 
-        // 種目ごとに「参加費 × 人数」でまとめる
+        // 種目・参加料ごとに「参加料 × 人数」でまとめる（区分別の参加料なら同じ種目でも金額が分かれる）
         $lineItems = $entry->items
-            ->groupBy('event_id')
+            ->groupBy(fn ($item) => $item->event_id.'-'.$item->fee)
             ->map(fn ($items) => [
                 'price_data' => [
                     'currency' => 'jpy',
                     'unit_amount' => $items->first()->fee,
-                    'product_data' => ['name' => $entry->meet->name.' '.$items->first()->event->name.' 参加費'],
+                    'product_data' => ['name' => $entry->meet->name.' '.$items->first()->event->name.' 参加料（'.number_format($items->first()->fee).'円）'],
                 ],
                 'quantity' => $items->count(),
             ])

@@ -104,7 +104,7 @@ class EntryController extends Controller
             'meet' => $meet,
             'methods' => PaymentGateways::available(),
             'selections' => $selections,
-            'total' => $selections->sum(fn ($s) => $s['event']->fee),
+            'total' => $selections->sum('fee'),
         ]);
     }
 
@@ -121,6 +121,9 @@ class EntryController extends Controller
             return redirect()->route('entries.create', $meet);
         }
 
+        if (! $request->boolean('terms')) {
+            return redirect()->route('entries.confirm', $meet)->withErrors(['terms' => '競技者登録と参加料についての確認にチェックを入れてください。']);
+        }
         $method = (string) $request->input('payment_method', Entry::METHOD_CARD);
         if (! array_key_exists($method, PaymentGateways::available())) {
             return redirect()->route('entries.confirm', $meet)->withErrors(['payment_method' => 'お支払い方法を選んでください。']);

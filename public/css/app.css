@@ -329,3 +329,13 @@ input[type=time] { padding: 6px 8px; font: inherit; border: 1px solid var(--bord
   .page-break { break-before: page; }
   .program-cover { border: 1px solid #999; }
 }
+
+.meet-facts { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 10px 0 0; font-size: .92rem; }
+.meet-facts div { display: flex; gap: 6px; }
+.meet-facts dt { color: var(--muted); }
+.meet-facts dd { margin: 0; }
+.meet-facts .fee { display: inline-block; margin-right: 10px; font-weight: 700; color: var(--brand-ink); }
+.contact-box { margin-top: 40px; background: #fff; border: 2px solid var(--brand-ink); border-radius: 12px; padding: 18px 22px; max-width: 640px; margin-left: auto; }
+.contact-box h2 { margin: 0 0 6px; font-size: 1rem; color: var(--brand-ink); }
+.contact-box p { margin: 0; }
+.terms { background: var(--warn-bg); padding: 10px 12px; border-radius: 8px; }

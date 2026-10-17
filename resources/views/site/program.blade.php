@@ -13,7 +13,7 @@
             <div>
                 <p class="section-eyebrow">OFFICIAL PROGRAM</p>
                 <h1>{{ $meet->name }}</h1>
-                <p>{{ $meet->held_on->isoFormat('YYYY年M月D日（ddd）') }}{{ $meet->venue ? '　'.$meet->venue : '' }}</p>
+                <p>{{ $meet->held_on->isoFormat('YYYY年M月D日（ddd）') }}{{ $meet->startTimeLabel() ? '　'.$meet->startTimeLabel().' 競技開始予定' : '' }}{{ $meet->venue ? '　'.$meet->venue : '' }}</p>
                 <p class="muted">主催：{{ config('kizuna.organization.name') }}
                     @unless ($meet->isProgramFinal())　<strong>※暫定版</strong>@endunless</p>
             </div>
@@ -33,7 +33,10 @@
 
         <section class="page-break">
             <h2>スタートリスト</h2>
+            <p class="muted">ナンバーカードは各自で用意し、スタートリストのナンバーを白地に黒数字で明確に書き、胸部と背部につけてください。</p>
             @include('site._startlist')
         </section>
+
+        <p class="muted" style="margin-top:20px">競技会担当者（お問い合わせ）：{{ config('kizuna.contact.name') }}　{{ config('kizuna.contact.phone') }}　{{ config('kizuna.contact.email') }}</p>
     </div>
 @endsection

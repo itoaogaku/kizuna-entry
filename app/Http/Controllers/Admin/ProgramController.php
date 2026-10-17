@@ -127,7 +127,7 @@ class ProgramController extends Controller
         foreach ($races as $race) {
             $sheet = $book->createSheet();
             $sheet->setTitle(mb_substr(preg_replace('/[\\\\\/\?\*\[\]:]/u', '・', $race->name()), 0, 31));
-            $sheet->fromArray(['組', 'スタート', '順', '氏名', 'フリガナ', '所属', '種別・学年', '所属陸協', '申請タイム', '自己ベスト'], null, 'A1');
+            $sheet->fromArray(['組', 'スタート', 'ナンバー', '氏名', 'フリガナ', '所属', '種別・学年', '所属陸協', '申請タイム', '自己ベスト'], null, 'A1');
             $row = 2;
             foreach ($race->startListEntries as $sle) {
                 $item = $sle->entryItem;

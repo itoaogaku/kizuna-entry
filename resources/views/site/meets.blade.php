@@ -96,8 +96,15 @@
                         <span class="stage stage-{{ $meet->stage() }}">{{ $meet->stageLabel() }}</span>
                     </header>
                     <p class="division">{{ $meet->division }}</p>
+                    <dl class="meet-facts">
+                        @if ($meet->venue)<div><dt>会場</dt><dd>{{ $meet->venue }}</dd></div>@endif
+                        @if ($meet->startTimeLabel())<div><dt>競技開始</dt><dd>{{ $meet->startTimeLabel() }} 予定</dd></div>@endif
+                        @if ($meet->hasCategoryFees() && $meet->stage() !== 'finished')
+                            <div><dt>参加料</dt><dd>@foreach (\App\Models\Meet::FEE_LABELS as $key => $label)@if ($meet->{$key} !== null)<span class="fee">{{ $label }} {{ number_format($meet->{$key}) }}円</span>@endif @endforeach</dd></div>
+                        @endif
+                    </dl>
                     @if ($meet->stage() === 'open' || $meet->stage() === 'upcoming')
-                        <p class="muted entry-period">エントリー受付：{{ $meet->entry_opens_at->isoFormat('M/D（ddd）H:mm') }} 〜 {{ $meet->entry_closes_at->isoFormat('M/D（ddd）H:mm') }}</p>
+                        <p class="muted entry-period">エントリー受付：{{ $meet->entry_opens_at->isoFormat('M/D（ddd）H:mm') }} 〜 {{ $meet->entry_closes_at->isoFormat('M/D（ddd）H:mm') }}（参加料も締切日までにお支払いください）</p>
                     @endif
                     <div class="link-grid">
                         @if ($meet->stage() === 'open')
@@ -145,6 +152,14 @@
             </div>
         </section>
     @endif
+
+    @php $contact = config('kizuna.contact'); @endphp
+    <section class="contact-box">
+        <h2>競技会担当者（お問い合わせ）</h2>
+        <p>{{ $contact['name'] }}<br>
+            電話番号 <a href="tel:{{ preg_replace('/[^0-9]/', '', $contact['phone']) }}">{{ $contact['phone'] }}</a>　
+            メール <a href="mailto:{{ $contact['email'] }}">{{ $contact['email'] }}</a></p>
+    </section>
 
     <section class="cta">
         <div>

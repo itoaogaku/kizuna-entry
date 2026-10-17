@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 /**
  * レース（種目×男女）。組分けとスタート時刻を持つ。
  */
-#[Fillable(['event_id', 'gender', 'start_time', 'heat_size', 'heat_interval', 'fastest_last', 'sort_order'])]
+#[Fillable(['event_id', 'gender', 'division', 'start_time', 'heat_size', 'heat_interval', 'fastest_last', 'sort_order'])]
 class Race extends Model
 {
     protected function casts(): array
@@ -37,10 +37,16 @@ class Race extends Model
         return $this->hasMany(StartListEntry::class)->orderBy('heat')->orderBy('position');
     }
 
-    /** 例：「男子 5000m」 */
+    /**
+     * 例：「男子 5000m」。同じ種目に中学生の部があるときは「男子 5000m（中学生の部）」のように部門を付ける。
+     */
     public function name(): string
     {
-        return (Athlete::GENDERS[$this->gender] ?? '').'子 '.$this->event->name;
+        $name = (Athlete::GENDERS[$this->gender] ?? '').'子 '.$this->event->name;
+        $split = $this->division === 'junior' || static::where('meet_id', $this->meet_id)
+            ->where('event_id', $this->event_id)->where('gender', $this->gender)->where('division', 'junior')->exists();
+
+        return $split ? $name.'（'.Meet::DIVISION_LABELS[$this->division].'）' : $name;
     }
 
     public function heatCount(): int

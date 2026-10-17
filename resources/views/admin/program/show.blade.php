@@ -51,6 +51,10 @@
             「組分けを作り直す」で入れるか、作り直さずに組変更で調整してください。
         </div>
     @endif
+    @php $few = $races->filter(fn ($r) => $r->startListEntries->isNotEmpty() && $r->startListEntries->count() < config('kizuna.min_participants')); @endphp
+    @if ($few->isNotEmpty())
+        <div class="flash warn">最小遂行人数（{{ config('kizuna.min_participants') }}名）に満たないレースがあります：{{ $few->map(fn ($r) => $r->name().' '.$r->startListEntries->count().'名')->implode('、') }}</div>
+    @endif
     @if ($withdrawn > 0)
         <div class="flash warn">組分けのあとに取り消された申込が {{ $withdrawn }} 件あります（スタートリストでは「取消」と表示されます）。</div>
     @endif
@@ -108,7 +112,7 @@
                     <div class="table-wrap heat-table">
                         <table>
                             <thead><tr><th colspan="7">{{ $heat }}組 @if ($time = $race->heatStartTime($heat))<span class="muted">{{ $time }} スタート</span>@endif</th></tr>
-                            <tr><th class="num">順</th><th>氏名</th><th>所属</th><th>種別・学年</th><th>申請タイム</th><th>自己ベスト</th><th>組</th></tr></thead>
+                            <tr><th class="num">ナンバー</th><th>氏名</th><th>所属</th><th>種別・学年</th><th>申請タイム</th><th>自己ベスト</th><th>組</th></tr></thead>
                             <tbody>
                             @foreach ($entries as $sle)
                                 @php $item = $sle->entryItem; $user = $item->entry->user; @endphp

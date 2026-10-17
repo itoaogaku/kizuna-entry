@@ -78,13 +78,14 @@
                                         @foreach ($events as $event)
                                             @continue (! $event->allowsGender($athlete->gender))
                                             @php
+                                                $fee = $meet->feeFor($athlete->category, $event);
                                                 $left = $remaining[$event->id];
                                                 $isEntered = $already->contains($event->id);
                                             @endphp
-                                            <option value="{{ $event->id }}" data-fee="{{ $event->fee }}" data-name="{{ $event->name }}"
+                                            <option value="{{ $event->id }}" data-fee="{{ $fee }}" data-name="{{ $event->name }}"
                                                     @selected((string) ($slot['event_id'] ?? '') === (string) $event->id)
                                                     @disabled($isEntered || $left === 0)>
-                                                {{ $event->name }}（{{ number_format($event->fee) }}円{{ $left === 0 ? '・定員到達' : ($left !== null && $left <= 10 ? '・残'.$left : '') }}{{ $isEntered ? '・申込済' : '' }}）
+                                                {{ $event->name }}（{{ number_format($fee) }}円{{ $left === 0 ? '・定員到達' : ($left !== null && $left <= 10 ? '・残'.$left : '') }}{{ $isEntered ? '・申込済' : '' }}）
                                             </option>
                                         @endforeach
                                     </select>

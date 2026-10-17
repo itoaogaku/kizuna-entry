@@ -15,7 +15,7 @@ class MeetFactory extends Factory
         return [
             'name' => '第1回 絆記録会',
             'held_on' => now()->addMonth()->toDateString(),
-            'venue' => '〇〇陸上競技場',
+            'venue' => '町田市立陸上競技場',
             'entry_opens_at' => now()->subDay(),
             'entry_closes_at' => now()->addWeeks(2),
             'max_events_per_athlete' => 2,

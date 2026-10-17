@@ -44,6 +44,8 @@ return [
     'komoju' => [
         'secret' => env('KOMOJU_SECRET'),
         'webhook_secret' => env('KOMOJU_WEBHOOK_SECRET'),
+        // コンビニ払いの手数料（円）。申込者の負担として合計金額に足す
+        'fee' => (int) env('KOMOJU_FEE', 0),
     ],
 
     // 運営への通知先（入金完了メールのBCCなど）

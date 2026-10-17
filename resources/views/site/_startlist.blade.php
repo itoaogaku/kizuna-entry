@@ -6,7 +6,7 @@
                 <table>
                     <thead>
                     <tr><th colspan="6" class="heat-head">{{ $heat }}組 @if ($time = $race->heatStartTime($heat))<span>{{ $time }} スタート</span>@endif</th></tr>
-                    <tr><th class="num">順</th><th>氏名</th><th>フリガナ</th><th>所属</th><th>学年</th><th>申請タイム</th></tr>
+                    <tr><th class="num">ナンバー</th><th>氏名</th><th>フリガナ</th><th>所属</th><th>学年</th><th>申請タイム</th></tr>
                     </thead>
                     <tbody>
                     @foreach ($entries as $sle)

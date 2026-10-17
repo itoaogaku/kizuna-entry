@@ -40,6 +40,10 @@ class MeetController extends Controller
             'notes' => $source?->notes,
             'division' => $source->division ?? '公認の部',
             'eligible' => $source?->eligible,
+            'start_time' => $source?->start_time,
+            'fee_junior_high' => $source?->fee_junior_high,
+            'fee_student' => $source?->fee_student,
+            'fee_general' => $source?->fee_general,
         ]);
         $events = $source
             ? $source->events->map(fn ($e) => $e->only(['name', 'gender', 'fee', 'capacity']))->all()
@@ -56,7 +60,8 @@ class MeetController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
-        $events = $this->validatedEvents($request);
+        $categoryFees = ($data['fee_junior_high'] ?? null) !== null || ($data['fee_student'] ?? null) !== null || ($data['fee_general'] ?? null) !== null;
+        $events = $this->validatedEvents($request, $categoryFees);
 
         $meet = DB::transaction(function () use ($data, $events) {
             $meet = Meet::create($data);
@@ -100,7 +105,7 @@ class MeetController extends Controller
      *
      * @return array<int, array{name: string, gender: ?string, fee: int, capacity: ?int}>
      */
-    private function validatedEvents(Request $request): array
+    private function validatedEvents(Request $request, bool $categoryFees = false): array
     {
         $rows = collect((array) $request->input('events', []))
             ->filter(fn ($row) => trim((string) ($row['name'] ?? '')) !== '')
@@ -111,7 +116,7 @@ class MeetController extends Controller
             'events' => ['array'],
             'events.*.name' => ['required', 'string', 'max:100', 'distinct'],
             'events.*.gender' => ['nullable', Rule::in(['M', 'F'])],
-            'events.*.fee' => ['required', 'integer', 'min:50', 'max:100000'],
+            'events.*.fee' => $categoryFees ? ['nullable', 'integer', 'min:0', 'max:100000'] : ['required', 'integer', 'min:50', 'max:100000'],
             'events.*.capacity' => ['nullable', 'integer', 'min:1'],
         ], [
             'events.*.name.distinct' => '種目名「:input」が重複しています。',
@@ -125,7 +130,7 @@ class MeetController extends Controller
         return array_map(fn ($e) => [
             'name' => trim($e['name']),
             'gender' => $e['gender'] ?? null,
-            'fee' => (int) $e['fee'],
+            'fee' => (int) ($e['fee'] ?? 0),
             'capacity' => isset($e['capacity']) && $e['capacity'] !== '' ? (int) $e['capacity'] : null,
         ], $validated);
     }
@@ -149,6 +154,10 @@ class MeetController extends Controller
             'max_events_per_athlete' => ['required', 'integer', 'min:1', 'max:10'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'division' => ['nullable', 'string', 'max:50'],
+            'start_time' => ['nullable', 'date_format:H:i'],
+            'fee_junior_high' => ['nullable', 'integer', 'min:50', 'max:100000'],
+            'fee_student' => ['nullable', 'integer', 'min:50', 'max:100000'],
+            'fee_general' => ['nullable', 'integer', 'min:50', 'max:100000'],
             'eligible' => ['nullable', 'string', 'max:100'],
             'program_note' => ['nullable', 'string', 'max:50'],
             'photo_url' => ['nullable', 'url', 'max:500'],
@@ -162,6 +171,7 @@ class MeetController extends Controller
             'outline_file' => '大会要項のPDF', 'program_file' => '大会プログラムのPDF', 'result_file' => 'リザルトのPDF',
             'outline_url' => '大会要項のURL', 'program_url' => '大会プログラムのURL', 'result_url' => 'リザルトのURL',
             'photo_url' => '写真館のURL', 'press_url' => '取材・撮影のお申込みのURL', 'division' => '部門', 'eligible' => '対象',
+            'start_time' => '競技開始予定', 'fee_junior_high' => '中学生の参加料', 'fee_student' => '高校生・大学生の参加料', 'fee_general' => '一般・実業団の参加料',
         ]);
 
         // PDFは公開用の保存場所に置く（差し替え・削除のときは古いファイルを消す）

@@ -16,7 +16,7 @@
                     <td>{{ $s['event']->name }}</td>
                     <td>{{ $s['record'] }}</td>
                     <td style="white-space:normal">{{ $s['pr'] ?? '' }}</td>
-                    <td class="num">{{ number_format($s['event']->fee) }}円</td>
+                    <td class="num">{{ number_format($s['fee']) }}円</td>
                 </tr>
             @endforeach
             <tr>

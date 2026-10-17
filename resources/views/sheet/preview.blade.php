@@ -30,7 +30,7 @@
                     <td>{{ $row['event']?->name ?? $row['eventName'] }}</td>
                     <td>{{ $row['record'] }}</td>
                     <td>{{ $row['best'] }}</td>
-                    <td class="num">{{ $row['event'] ? number_format($row['event']->fee).'円' : '' }}</td>
+                    <td class="num">{{ $row['event'] ? number_format($row['fee']).'円' : '' }}</td>
                 </tr>
                 @if ($row['errors'])
                     <tr class="row-error"><td></td><td colspan="9" style="white-space:normal">{{ implode(' ', $row['errors']) }}</td></tr>

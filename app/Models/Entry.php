@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\URL;
 
-#[Fillable(['meet_id', 'status', 'source', 'sheet_path', 'total_amount', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at'])]
+#[Fillable(['meet_id', 'status', 'source', 'sheet_path', 'total_amount', 'payment_fee', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at'])]
 class Entry extends Model
 {
     use HasFactory;

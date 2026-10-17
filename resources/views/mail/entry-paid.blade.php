@@ -9,7 +9,7 @@
 ■ 受付番号：{{ $entry->id }}
 ■ 大会：{{ $entry->meet->name }}（{{ $entry->meet->held_on->isoFormat('YYYY年M月D日（ddd）') }}{{ $entry->meet->venue ? '・'.$entry->meet->venue : '' }}）
 ■ 入金日時：{{ $entry->paid_at->format('Y/m/d H:i') }}
-■ 合計金額：{{ number_format($entry->total_amount) }}円（{{ $entry->methodLabel() }}）
+■ 合計金額：{{ number_format($entry->total_amount) }}円（{{ $entry->methodLabel() }}{{ $entry->payment_fee ? '・手数料 '.number_format($entry->payment_fee).'円を含む' : '' }}）
 
 ■ エントリー内容
 @foreach ($entry->items as $item)
