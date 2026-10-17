@@ -83,12 +83,14 @@ KIZUNA_ADMIN_EMAIL=（運営の受信用アドレス）
 Laravel は `public` フォルダだけを公開します。SSH で次を実行し、サブドメインの公開フォルダを `~/kizuna-entry/public` へのリンクに置き換えます。
 
 ```sh
-cd ~/example.com/public_html
-mv entry entry.bak          # サブドメイン作成時にできたフォルダを退避
-ln -s ~/kizuna-entry/public entry
+cd ~/acckizuna.com/public_html
+mv taikai.acckizuna.com taikai.acckizuna.com.bak   # サブドメイン作成時にできたフォルダを退避
+ln -s ~/kizuna-entry/public taikai.acckizuna.com
 ```
 
-`https://entry.example.com` を開いてトップページが出れば成功です（フォルダの場所はサブドメイン設定画面の「ドキュメントルート」で確認できます）。
+`https://taikai.acckizuna.com` を開いてトップページが出れば成功です。
+フォルダの場所はサブドメイン設定画面の「ドキュメントルート」で確認できます
+（`/acckizuna.com/public_html/taikai.acckizuna.com/` を選んだ場合の例です）。
 
 ## 5. 運営アカウントを作る
 
