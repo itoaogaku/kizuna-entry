@@ -17,6 +17,8 @@ jobs:
     env:
       APP_DIR: ${{ vars.XSERVER_APP_DIR || 'kizuna-entry' }}
       PHP_BIN: ${{ vars.XSERVER_PHP || '/usr/bin/php8.3' }}
+      # サブドメインの公開フォルダ（ホームからの場所）。例：acckizuna.com/public_html/taikai.acckizuna.com
+      DOCROOT: ${{ vars.XSERVER_DOCROOT }}
     steps:
       - uses: actions/checkout@v4
 
@@ -58,17 +60,48 @@ jobs:
             --exclude '/.env' --exclude '/storage/' --exclude '/public/storage' --exclude '/database/database.sqlite' \
             ./ "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}:${APP_DIR}/"
 
+      # GitHub の Secrets「XSERVER_ENV」に書いた設定を、サーバーの .env にする。
+      # APP_KEY はサーバーで一度だけ作り、その後は引き継ぐ（Secrets に書く必要はない）。
+      - name: Write .env
+        env:
+          APP_ENV_FILE: ${{ secrets.XSERVER_ENV }}
+        run: |
+          if [ -z "$APP_ENV_FILE" ]; then
+            echo "Secrets に XSERVER_ENV がないので、サーバーの .env をそのまま使います。"
+            exit 0
+          fi
+          printf '%s\n' "$APP_ENV_FILE" | ssh -i ~/.ssh/id_deploy -p "${{ secrets.XSERVER_PORT || '10022' }}" \
+            "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}" "
+            set -e
+            cd ${APP_DIR}
+            umask 077
+            cat > .env.new
+            if ! grep -qE '^APP_KEY=.+' .env.new && grep -qE '^APP_KEY=.+' .env 2>/dev/null; then
+              sed -i '/^APP_KEY=/d' .env.new
+              grep -E '^APP_KEY=.+' .env | head -1 >> .env.new
+            fi
+            mv .env.new .env
+          "
+
       - name: Migrate and cache
         run: |
           ssh -i ~/.ssh/id_deploy -p "${{ secrets.XSERVER_PORT || '10022' }}" \
             "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}" "
             set -e
             cd ${APP_DIR}
-            test -f .env || { echo '.env がありません。docs/deploy-xserver.md の手順で作成してください。'; exit 1; }
-            mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+            test -f .env || { echo '.env がありません。Secrets に XSERVER_ENV を登録してください（docs/deploy-xserver.md）。'; exit 1; }
+            mkdir -p storage/app/private storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+            grep -q '^APP_KEY=' .env || echo 'APP_KEY=' >> .env
+            grep -qE '^APP_KEY=.+' .env || ${PHP_BIN} artisan key:generate --force
+            # サブドメインの公開フォルダを、アプリの public フォルダへのリンクにする（初回だけ）
+            if [ -n '${DOCROOT}' ] && [ ! -L ~/'${DOCROOT}' ]; then
+              if [ -e ~/'${DOCROOT}' ]; then mv ~/'${DOCROOT}' ~/'${DOCROOT}'.bak-\$(date +%Y%m%d%H%M%S); fi
+              ln -s ~/${APP_DIR}/public ~/'${DOCROOT}'
+            fi
             ${PHP_BIN} artisan down --retry=30 || true
             trap '${PHP_BIN} artisan up' EXIT
             ${PHP_BIN} artisan migrate --force
             ${PHP_BIN} artisan storage:link || true
             ${PHP_BIN} artisan optimize
+            ${PHP_BIN} artisan kizuna:make-admin --if-exists
           "

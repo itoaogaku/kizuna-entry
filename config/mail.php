@@ -115,4 +115,10 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    // 返信先。送信元（Xserver のアドレス）に返信が来ても届かないので、運営の受信用アドレスに向ける
+    'reply_to' => [
+        'address' => env('MAIL_REPLY_TO_ADDRESS'),
+        'name' => env('MAIL_FROM_NAME', 'Example'),
+    ],
+
 ];
