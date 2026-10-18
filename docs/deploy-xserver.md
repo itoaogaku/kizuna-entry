@@ -13,7 +13,8 @@ SSH でコマンドを打つ必要はありません。最初の1回だけ、次
    （ドキュメントルートは `/acckizuna.com/public_html/taikai.acckizuna.com/`）。
 3. **Wix の DNS**：A レコード `taikai` → サーバー情報の IP アドレス。反映後に **SSL設定** で `taikai.acckizuna.com` に独自SSLを追加。
 4. **MySQL設定**：ユーザー `accxserver_kzn` とデータベース `accxserver_kzn`（MariaDB10.5・UTF-8）を作り、アクセス権を付ける。
-5. **メールアカウント設定**：送信元のアドレスを作る（例：`taikai@acckizuna.com`）。
+5. **送信用メール**：いつもの `kizuna.taikai@gmail.com` から送る。Google アカウントで2段階認証をオンにし、
+   https://myaccount.google.com/apppasswords で「アプリパスワード」（16文字）を作って `MAIL_PASSWORD` に入れる。
 6. **SSH設定**：ON にし、「公開鍵を登録」で鍵ペアを自動生成（ラベル例 `kizuna-entry`）。
    秘密鍵（`.key`）がダウンロードされる。パスフレーズを控えておく。
 
@@ -73,13 +74,13 @@ FILESYSTEM_DISK=local
 
 MAIL_MAILER=smtp
 MAIL_SCHEME=smtps
-MAIL_HOST=sv14853.xserver.jp
+MAIL_HOST=smtp.gmail.com
 MAIL_PORT=465
-MAIL_USERNAME=taikai@acckizuna.com
-MAIL_PASSWORD="（メールアカウントのパスワード）"
-MAIL_FROM_ADDRESS=taikai@acckizuna.com
+MAIL_USERNAME=kizuna.taikai@gmail.com
+MAIL_PASSWORD="（Googleのアプリパスワード16文字・空白なし）"
+MAIL_FROM_ADDRESS=kizuna.taikai@gmail.com
 MAIL_FROM_NAME="絆記録挑戦会"
-MAIL_REPLY_TO_ADDRESS=kizuna.taikai@gmail.com
+MAIL_REPLY_TO_ADDRESS=
 
 STRIPE_SECRET=（sk_test_…）
 STRIPE_WEBHOOK_SECRET=（whsec_…）
