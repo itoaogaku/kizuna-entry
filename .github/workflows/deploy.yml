@@ -59,7 +59,7 @@ jobs:
       - name: Upload
         run: |
           rsync -az --delete \
-            -e "ssh -i ~/.ssh/id_deploy -p ${{ secrets.XSERVER_PORT || '10022' }}" \
+            -e "ssh -o ServerAliveInterval=30 -i ~/.ssh/id_deploy -p ${{ secrets.XSERVER_PORT || '10022' }}" \
             --exclude '.git/' --exclude '.github/' --exclude 'tests/' --exclude 'node_modules/' \
             --exclude '/.env' --exclude '/storage/' --exclude '/public/storage' --exclude '/database/database.sqlite' \
             ./ "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}:${APP_DIR}/"
@@ -74,7 +74,7 @@ jobs:
             echo "Secrets に XSERVER_ENV がないので、サーバーの .env をそのまま使います。"
             exit 0
           fi
-          printf '%s\n' "$APP_ENV_FILE" | ssh -i ~/.ssh/id_deploy -p "${{ secrets.XSERVER_PORT || '10022' }}" \
+          printf '%s\n' "$APP_ENV_FILE" | ssh -o ServerAliveInterval=30 -i ~/.ssh/id_deploy -p "${{ secrets.XSERVER_PORT || '10022' }}" \
             "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}" "
             set -e
             cd ${APP_DIR}
@@ -89,7 +89,7 @@ jobs:
 
       - name: Migrate and cache
         run: |
-          ssh -i ~/.ssh/id_deploy -p "${{ secrets.XSERVER_PORT || '10022' }}" \
+          ssh -o ServerAliveInterval=30 -i ~/.ssh/id_deploy -p "${{ secrets.XSERVER_PORT || '10022' }}" \
             "${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}" "
             set -e
             cd ${APP_DIR}

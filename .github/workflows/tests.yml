@@ -18,3 +18,5 @@ jobs:
       - run: cp .env.example .env && php artisan key:generate
       - run: vendor/bin/pint --test
       - run: php artisan test
+      # 本番の php artisan optimize と同じく、すべての画面をコンパイルできるか確かめる
+      - run: php artisan view:cache

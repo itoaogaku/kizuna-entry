@@ -36,6 +36,18 @@ class AthleteTest extends TestCase
         ]);
     }
 
+    public function test_athlete_form_offers_graduate_grades_and_optional_kana(): void
+    {
+        $user = User::factory()->create();
+        $athlete = Athlete::factory()->for($user)->create(['grade' => 'M1']);
+
+        $this->actingAs($user)->get(route('athletes.create'))->assertOk()
+            ->assertSee('<option value="M2"', false)
+            ->assertDontSee('name="kana" value="" placeholder="スズキ タロウ" required', false);
+        $this->actingAs($user)->get(route('athletes.edit', $athlete))->assertOk()
+            ->assertSee('<option value="M1" selected', false);
+    }
+
     public function test_cannot_edit_other_teams_athlete(): void
     {
         $athlete = Athlete::factory()->create();
