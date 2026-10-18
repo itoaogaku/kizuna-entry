@@ -30,7 +30,8 @@ GitHub の `main` ブランチに変更が入ると、GitHub Actions が自動�
 | `XSERVER_HOST` | ホスト名（例：`sv12345.xserver.jp`） |
 | `XSERVER_USER` | サーバーID |
 | `XSERVER_PORT` | `10022` |
-| `XSERVER_SSH_KEY` | ダウンロードした秘密鍵ファイルの中身をすべて貼り付け |
+| `XSERVER_SSH_KEY` | ダウンロードした秘密鍵ファイル（`.key`）をメモ帳で開き、中身をすべて貼り付け |
+| `XSERVER_SSH_PASSPHRASE` | 鍵ペアを作るときに決めたパスフレーズ |
 
 **Variables**
 
