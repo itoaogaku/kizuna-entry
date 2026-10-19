@@ -2,7 +2,9 @@
 @section('title', '個人申し込み')
 
 @section('content')
+    <p class="section-eyebrow">大会エントリー用ログイン</p>
     <h1>個人申し込み</h1>
+    @include('auth._separate-account')
     <div class="card">
         <p class="muted">登録済みの方は、メールアドレスとパスワードでログインしてください。</p>
         <form method="POST" action="{{ route('individual.login') }}">

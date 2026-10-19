@@ -3,26 +3,33 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@hasSection('title')@yield('title') | @endif{{ config('app.name') }}</title>
+    <title>@hasSection('title')@yield('title') | @endif{{ config('kizuna.site.title') }}</title>
     <meta name="theme-color" content="#265c64">
     <link rel="icon" href="{{ asset('images/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@500;600&display=swap">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=19">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20">
 </head>
 <body>
+@php $site = config('kizuna.site'); @endphp
+<div class="site-strip">
+    <div class="inner">
+        <span><span class="pc">アスリートキャリアセンターが運営する</span><strong>大会エントリー専用サイト</strong>です</span>
+        <a href="{{ config('kizuna.organization.home_url') }}"><span class="pc">アスリートキャリアセンター</span>公式サイトへ戻る</a>
+    </div>
+</div>
 <header class="site">
     <div class="inner">
         <a class="brand" href="{{ route('site.meets') }}">
             <img src="{{ asset('images/logo.png') }}" alt="" width="40" height="35">
-            <span>アスリートキャリアセンター<small>{{ config('app.name') }}</small></span>
+            <span>{{ $site['name'] }}<small>{{ $site['en'] }}｜{{ $site['tagline'] }}</small></span>
         </a>
         <nav>
             <a href="{{ route('site.meets') }}" @class(['current' => request()->routeIs('site.meets')])>大会開催</a>
             <a href="{{ route('home') }}" @class(['current' => request()->routeIs('home')])>エントリー</a>
             @auth
-                <span class="muted who">{{ auth()->user()->displayName() }}（{{ auth()->user()->typeLabel() }}）</span>
+                <span class="who">{{ auth()->user()->displayName() }}（{{ auth()->user()->typeLabel() }}）</span>
                 <a href="{{ route('athletes.index') }}">{{ auth()->user()->isTeam() ? '選手登録' : '登録情報' }}</a>
                 <a href="{{ route('entries.index') }}">エントリー履歴</a>
                 @if (auth()->user()->is_admin)
@@ -33,7 +40,7 @@
                     <button class="btn secondary small" type="submit">ログアウト</button>
                 </form>
             @else
-                <a href="{{ route('team.login') }}">ログイン</a>
+                <a href="{{ route('team.login') }}" @class(['login-pill', 'current' => request()->routeIs('team.login', 'individual.login')])>エントリー用ログイン</a>
             @endauth
         </nav>
     </div>
@@ -69,7 +76,7 @@
             </address>
         </div>
         <nav aria-label="サイト内リンク">
-            <a href="{{ $org['home_url'] }}">ホーム</a>
+            <a href="{{ $org['home_url'] }}">アスリートキャリアセンター公式サイト</a>
             <a href="{{ route('site.meets') }}">大会開催</a>
             <a href="{{ route('home') }}">エントリー</a>
             <a href="{{ route('sheet.create') }}">エクセル添付で申し込む</a>

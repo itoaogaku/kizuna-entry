@@ -16,7 +16,7 @@ class ReceiptPdf
         $receipt = config('kizuna.receipt');
 
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8');
-        $pdf->SetCreator(config('app.name'));
+        $pdf->SetCreator(config('kizuna.site.title'));
         $pdf->SetAuthor($receipt['issuer']);
         $pdf->SetTitle('領収書 '.$entry->receipt_number);
         $pdf->setPrintHeader(false);

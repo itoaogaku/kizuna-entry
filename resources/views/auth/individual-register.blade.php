@@ -2,7 +2,9 @@
 @section('title', '個人の新規登録')
 
 @section('content')
+    <p class="section-eyebrow">大会エントリー用アカウント</p>
     <h1>個人の新規登録</h1>
+    @include('auth._separate-account')
     <div class="card">
         <p class="muted">出場する選手本人の情報を登録してください。未成年の場合は、保護者の連絡先でも構いません。</p>
         <form method="POST" action="{{ route('individual.register') }}">

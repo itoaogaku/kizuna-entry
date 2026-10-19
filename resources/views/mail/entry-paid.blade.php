@@ -24,5 +24,5 @@
 {{ $entry->receiptUrl() }}
 
 ――――――――――――――――
-{{ config('app.name') }}
+{{ config('kizuna.site.title') }}
 {{ config('app.url') }}

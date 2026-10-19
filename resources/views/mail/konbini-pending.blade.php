@@ -24,5 +24,5 @@
 ※お支払い期限を過ぎると、お申し込みは自動で取り消されます。
 
 ――――――――――――――――
-{{ config('app.name') }}
+{{ config('kizuna.site.title') }}
 {{ config('app.url') }}

@@ -2,6 +2,7 @@
 
 @section('content')
     <h1>エントリー受付</h1>
+    @include('auth._separate-account')
     <p>エントリー方法は <strong>2通り</strong> あります。どちらでも同じように受け付けます。</p>
 
     <div class="method-grid">

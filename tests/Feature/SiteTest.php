@@ -117,4 +117,14 @@ class SiteTest extends TestCase
             ->assertSee('返金はお受けしていません');
         $this->get(route('site.meets'))->assertSee(route('site.legal'));
     }
+
+    public function test_site_is_marked_as_separate_entry_site_with_its_own_login(): void
+    {
+        $this->get(route('site.meets'))->assertOk()
+            ->assertSee('大会エントリー専用サイト')
+            ->assertSee('エントリー用ログイン')
+            ->assertSee('公式サイトへ戻る');
+        $this->get(route('team.login'))->assertOk()->assertSee('このサイトのアカウントは、大会エントリー専用です。');
+        $this->get(route('individual.register'))->assertOk()->assertSee('このサイトのアカウントは、大会エントリー専用です。');
+    }
 }

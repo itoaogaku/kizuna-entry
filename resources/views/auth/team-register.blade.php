@@ -2,7 +2,9 @@
 @section('title', '団体の新規登録')
 
 @section('content')
+    <p class="section-eyebrow">大会エントリー用アカウント</p>
     <h1>団体の新規登録</h1>
+    @include('auth._separate-account')
     <div class="card">
         <p class="muted">次回からは、ここで登録する<strong>団体名とパスワード</strong>で申込データを開きます。入金完了メールは代表者のメールアドレスに届きます。</p>
         <form method="POST" action="{{ route('team.register') }}">

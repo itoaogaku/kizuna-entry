@@ -355,3 +355,23 @@ a.badge { text-decoration: none; }
 /* 特定商取引法に基づく表記 */
 .legal th, .legal td { white-space: normal; vertical-align: top; }
 .legal th { width: 30%; min-width: 120px; }
+
+/* 公式サイト（acckizuna.com）と見分けがつくように、上に案内の帯を出し、ヘッダーを濃い色にする */
+.site-strip { background: #10292d; color: #cfe6e6; font-size: .78rem; }
+.site-strip .inner { max-width: 1120px; margin: 0 auto; padding: 6px 16px; display: flex; flex-wrap: wrap; gap: 2px 16px; justify-content: space-between; align-items: center; }
+.site-strip strong { color: #fff; font-weight: 700; }
+.site-strip a { color: #fff; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.site-strip a::before { content: "← "; }
+header.site { background: var(--brand-ink); backdrop-filter: none; border-bottom: 4px solid var(--brand); }
+header.site .brand img { background: #fff; border-radius: 8px; padding: 3px; width: 42px; }
+header.site .brand span { color: #fff; font-size: 1.25rem; letter-spacing: .1em; font-weight: 900; }
+header.site .brand small { color: #bfe0e0; font-size: .68rem; letter-spacing: .08em; font-weight: 500; }
+header.site nav a { color: #e9f6f6; }
+header.site nav a.current, header.site nav a:hover { border-bottom-color: #9fd8d9; color: #fff; }
+header.site nav .who { color: #bfe0e0; font-size: .8rem; }
+header.site nav a.login-pill { border: 1px solid #9fd8d9; border-radius: 99px; padding: 3px 14px; }
+header.site nav a.login-pill:hover, header.site nav a.login-pill.current { background: #fff; color: var(--brand-ink); border-color: #fff; }
+header.site .btn.secondary { background: transparent; color: #fff; border-color: #9fd8d9; }
+.notice-separate { background: var(--warn-bg); border: 1px solid #f0d48a; border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; font-size: .9rem; line-height: 1.8; }
+.notice-separate strong { display: block; color: #7a5300; }
+@media print { .site-strip { display: none !important; } }
