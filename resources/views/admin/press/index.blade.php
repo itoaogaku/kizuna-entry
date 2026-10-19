@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', $meet->name.' 取材・撮影のお申込み')
 
 @section('content')
     <h1>{{ $meet->name }} 取材・撮影のお申込み</h1>
-    @include('admin.nav')
     <p><a href="{{ route('admin.meets.show', $meet) }}">← 大会の画面に戻る</a></p>
     <div class="table-wrap">
         <table>

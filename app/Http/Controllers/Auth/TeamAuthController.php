@@ -37,6 +37,10 @@ class TeamAuthController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
+        if ($request->user()->is_admin) {
+            return redirect()->route('admin.meets.index');
+        }
+
         return redirect()->intended(route('home'));
     }
 

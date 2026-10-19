@@ -173,4 +173,25 @@ class AdminTest extends TestCase
         $this->assertTrue($user->fresh()->is_admin);
         $this->artisan('kizuna:make-admin missing@example.com')->assertFailed();
     }
+
+    public function test_admin_has_its_own_screen_and_cannot_use_entry_pages(): void
+    {
+        $admin = User::factory()->admin()->create(['team_name' => '絆記録会 運営', 'password' => 'secret-pass']);
+
+        $this->actingAs($admin)->get(route('admin.meets.index'))->assertOk()
+            ->assertSee('admin-header', false)
+            ->assertSee('運営専用')
+            ->assertDontSee('エントリー用ログイン');
+        $this->actingAs($admin)->get(route('athletes.index'))->assertRedirect(route('admin.meets.index'));
+        $this->actingAs($admin)->get(route('home'))->assertRedirect(route('admin.meets.index'));
+        $this->actingAs($admin)->get(route('entries.index'))->assertRedirect(route('admin.meets.index'));
+    }
+
+    public function test_admin_login_goes_straight_to_admin_screen(): void
+    {
+        User::factory()->admin()->create(['team_name' => '絆記録会 運営', 'password' => 'secret-pass']);
+
+        $this->post(route('team.login'), ['team_name' => '絆記録会 運営', 'password' => 'secret-pass'])
+            ->assertRedirect(route('admin.meets.index'));
+    }
 }

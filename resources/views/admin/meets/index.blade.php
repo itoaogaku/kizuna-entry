@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', '管理画面')
 
 @section('content')
     <h1>管理画面：大会一覧</h1>
-    @include('admin.nav')
     <div class="actions" style="margin-bottom:16px">
         <a class="btn" href="{{ route('admin.meets.create') }}">新規大会登録</a>
     </div>

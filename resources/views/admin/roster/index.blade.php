@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', $meet->name.' 申込一覧')
 
 @section('content')
     <h1>{{ $meet->name }} 申込一覧（全団体・個人）</h1>
-    @include('admin.nav')
 
     <form method="GET" class="filters">
         <label>種目

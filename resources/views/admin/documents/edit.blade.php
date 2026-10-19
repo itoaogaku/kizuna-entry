@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', $meet->name.' 大会資料（PDF）')
 
 @section('content')
     <h1>{{ $meet->name }} 大会資料（PDF）</h1>
-    @include('admin.nav')
 
     <div class="card workflow">
         <strong>タイムテーブル・組編成・大会プログラムの作り方</strong>

@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', '登録団体・個人')
 
 @section('content')
     <h1>登録団体・個人</h1>
-    @include('admin.nav')
     <div class="table-wrap">
         <table>
             <thead><tr><th>区分</th><th>団体名・所属</th><th>代表者・氏名</th><th>メール</th><th>電話</th><th class="num">登録選手</th><th>登録日</th></tr></thead>

@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', $meet->name.' 申込・入金状況')
 
 @section('content')
     <h1>{{ $meet->name }} 申込・入金状況</h1>
-    @include('admin.nav')
     <form method="GET" class="actions" style="margin-bottom:16px">
         <select name="status" onchange="this.form.submit()" style="width:auto">
             @foreach ($statusOptions as $value => $label)

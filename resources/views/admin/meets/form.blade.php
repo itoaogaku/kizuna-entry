@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', $meet->exists ? '大会の編集' : '新規大会登録')
 
 @section('content')
     <h1>{{ $meet->exists ? '大会の編集' : '新規大会登録' }}</h1>
-    @include('admin.nav')
 
     @if (! $meet->exists && $meets->isNotEmpty())
         <form method="GET" class="filters">

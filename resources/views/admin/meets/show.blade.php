@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('title', $meet->name)
 
 @section('content')
     <h1>{{ $meet->name }}</h1>
-    @include('admin.nav')
     <div class="card">
         <dl class="kv">
             <dt>開催日</dt><dd>{{ $meet->held_on->isoFormat('YYYY年M月D日（ddd）') }} {{ $meet->venue }}</dd>

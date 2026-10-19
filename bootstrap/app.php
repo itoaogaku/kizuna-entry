@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\RedirectAdminToDashboard;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['admin' => EnsureAdmin::class]);
+        $middleware->alias(['admin' => EnsureAdmin::class, 'not-admin' => RedirectAdminToDashboard::class]);
         // 決済サービスのWebhookは署名で検証するので、CSRFトークンの確認から外す
         $middleware->validateCsrfTokens(except: ['stripe/webhook', 'komoju/webhook']);
         $middleware->redirectUsersTo('/');

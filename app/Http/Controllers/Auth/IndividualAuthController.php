@@ -35,6 +35,10 @@ class IndividualAuthController extends Controller
         }
         $request->session()->regenerate();
 
+        if ($request->user()->is_admin) {
+            return redirect()->route('admin.meets.index');
+        }
+
         return redirect()->intended(route('home'));
     }
 

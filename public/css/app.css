@@ -375,3 +375,19 @@ header.site .btn.secondary { background: transparent; color: #fff; border-color:
 .notice-separate { background: var(--warn-bg); border: 1px solid #f0d48a; border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; font-size: .9rem; line-height: 1.8; }
 .notice-separate strong { display: block; color: #7a5300; }
 @media print { .site-strip { display: none !important; } }
+
+/* 運営の管理画面。申込サイトとはっきり区別するため赤いヘッダーにする */
+.admin-header { position: sticky; top: 0; z-index: 20; background: #8f1d1d; color: #fff; border-bottom: 4px solid #e25555; }
+.admin-header .inner { max-width: 1120px; margin: 0 auto; padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.admin-brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; margin-right: auto; font-weight: 900; font-size: 1.1rem; letter-spacing: .06em; }
+.admin-badge { background: #fff; color: #8f1d1d; border-radius: 4px; padding: 1px 8px; font-size: .75rem; letter-spacing: .1em; }
+.admin-header nav { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: center; font-size: .95rem; }
+.admin-header nav a { color: #fde8e8; text-decoration: none; font-weight: 500; padding: 4px 0; border-bottom: 2px solid transparent; }
+.admin-header nav a.current, .admin-header nav a:hover { color: #fff; border-bottom-color: #ffb3b3; }
+.admin-header nav .who { color: #f7c6c6; font-size: .8rem; }
+.admin-header .btn { background: #fff; color: #8f1d1d; border-color: #fff; }
+.admin-strip { background: #fdecea; color: #8f1d1d; text-align: center; font-size: .8rem; padding: 4px 16px; border-bottom: 1px solid #f5c2c0; }
+@media (max-width: 640px) {
+  .admin-header nav { width: 100%; overflow-x: auto; flex-wrap: nowrap; white-space: nowrap; gap: 16px; }
+}
+@media print { .admin-header, .admin-strip { display: none !important; } }

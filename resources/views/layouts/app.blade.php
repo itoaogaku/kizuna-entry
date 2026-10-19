@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@500;600&display=swap">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=21">
 </head>
 <body>
 @php $site = config('kizuna.site'); @endphp
@@ -29,11 +29,12 @@
             <a href="{{ route('site.meets') }}" @class(['current' => request()->routeIs('site.meets')])>大会開催</a>
             <a href="{{ route('home') }}" @class(['current' => request()->routeIs('home')])>エントリー</a>
             @auth
-                <span class="who">{{ auth()->user()->displayName() }}（{{ auth()->user()->typeLabel() }}）</span>
-                <a href="{{ route('athletes.index') }}">{{ auth()->user()->isTeam() ? '選手登録' : '登録情報' }}</a>
-                <a href="{{ route('entries.index') }}">エントリー履歴</a>
                 @if (auth()->user()->is_admin)
-                    <a href="{{ route('admin.meets.index') }}">管理画面</a>
+                    <a href="{{ route('admin.meets.index') }}">管理画面へ戻る</a>
+                @else
+                    <span class="who">{{ auth()->user()->displayName() }}（{{ auth()->user()->typeLabel() }}）</span>
+                    <a href="{{ route('athletes.index') }}">{{ auth()->user()->isTeam() ? '選手登録' : '登録情報' }}</a>
+                    <a href="{{ route('entries.index') }}">エントリー履歴</a>
                 @endif
                 <form method="POST" action="{{ route('logout') }}" class="inline-form">
                     @csrf

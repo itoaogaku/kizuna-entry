@@ -22,7 +22,7 @@ Route::get('/meets/{meet}/press', [PressController::class, 'create'])->name('pre
 Route::post('/meets/{meet}/press', [PressController::class, 'store'])->middleware('throttle:10,1')->name('press.store');
 
 // エントリーの入口（ログイン前：方法の選択／ログイン後：受付中の大会）
-Route::get('/entry', HomeController::class)->name('home');
+Route::get('/entry', HomeController::class)->middleware('not-admin')->name('home');
 
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 Route::post('/komoju/webhook', KomojuWebhookController::class)->name('komoju.webhook');
@@ -59,8 +59,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [PasswordResetController::class, 'update'])->name('password.update');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+// 選手登録・エントリー（申込者用。運営アカウントは管理画面へ戻す）
+Route::middleware(['auth', 'not-admin'])->group(function () {
 
     // 選手の初期登録
     Route::get('/athletes/advance', [AthleteController::class, 'advanceForm'])->name('athletes.advance');
