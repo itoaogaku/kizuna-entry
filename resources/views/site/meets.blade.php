@@ -8,10 +8,6 @@
                 <p class="eyebrow">KIZUNA RECORD CHALLENGE</p>
                 <h1>大会開催</h1>
                 <p class="lead">アスリートの活動支援と活躍の場の提供のため、<br class="pc">記録挑戦会を開催しています。</p>
-                <div class="hero-actions">
-                    <a class="btn btn-light" href="#schedule">開催予定を見る</a>
-                    <a class="btn btn-outline-light" href="{{ route('home') }}">エントリーはこちら</a>
-                </div>
             </div>
             @if ($next)
                 <a class="next-card" href="#meet-{{ $next->id }}">
