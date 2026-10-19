@@ -6,12 +6,12 @@
     <h1>団体申し込み</h1>
     @include('auth._separate-account')
     <div class="card">
-        <p class="muted">登録済みの団体名とパスワードを入力すると、団体の申込データ（選手・エントリー）が開きます。</p>
+        <p class="muted">団体登録のときの代表者メールアドレスとパスワードを入力すると、団体の申込データ（選手・エントリー）が開きます。</p>
         <form method="POST" action="{{ route('team.login') }}">
             @csrf
             <div class="field">
-                <label for="team_name">登録団体名</label>
-                <input id="team_name" type="text" name="team_name" value="{{ old('team_name') }}" required autofocus autocomplete="organization">
+                <label for="email">メールアドレス <span class="hint">（団体登録のときの代表者メールアドレス）</span></label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email">
             </div>
             <div class="field">
                 <label for="password">パスワード</label>

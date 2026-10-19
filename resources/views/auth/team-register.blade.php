@@ -6,12 +6,12 @@
     <h1>団体の新規登録</h1>
     @include('auth._separate-account')
     <div class="card">
-        <p class="muted">次回からは、ここで登録する<strong>団体名とパスワード</strong>で申込データを開きます。入金完了メールは代表者のメールアドレスに届きます。</p>
+        <p class="muted">次回からは、ここで登録する<strong>代表者のメールアドレスとパスワード</strong>で申込データを開きます。入金完了メールは代表者のメールアドレスに届きます。</p>
         <form method="POST" action="{{ route('team.register') }}">
             @csrf
             <div class="row">
                 <div class="field">
-                    <label for="team_name">団体名 <span class="hint">（ログインに使います）</span></label>
+                    <label for="team_name">団体名</label>
                     <input id="team_name" type="text" name="team_name" value="{{ old('team_name') }}" placeholder="例：絆陸上クラブ" required>
                 </div>
                 <div class="field">

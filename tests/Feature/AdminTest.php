@@ -189,9 +189,9 @@ class AdminTest extends TestCase
 
     public function test_admin_login_goes_straight_to_admin_screen(): void
     {
-        User::factory()->admin()->create(['team_name' => '絆記録会 運営', 'password' => 'secret-pass']);
+        User::factory()->admin()->create(['team_name' => '絆記録会 運営', 'email' => 'info@example.com', 'password' => 'secret-pass']);
 
-        $this->post(route('team.login'), ['team_name' => '絆記録会 運営', 'password' => 'secret-pass'])
+        $this->post(route('team.login'), ['email' => 'info@example.com', 'password' => 'secret-pass'])
             ->assertRedirect(route('admin.meets.index'));
     }
 }

@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * 団体申し込み：団体名＋パスワードでログインし、団体の申込データを開く。
+ * 団体申し込み：代表者のメールアドレス＋パスワードでログインし、団体の申込データを開く。
  */
 class TeamAuthController extends Controller
 {
@@ -25,13 +25,14 @@ class TeamAuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $request->validate([
-            'team_name' => ['required', 'string'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::findTeamByName($request->input('team_name'));
+        $email = mb_strtolower(trim(mb_convert_kana((string) $request->input('email'), 'as')));
+        $user = User::where('type', User::TYPE_TEAM)->whereRaw('lower(email) = ?', [$email])->first();
         if (! $user || ! Hash::check($request->input('password'), $user->password)) {
-            throw ValidationException::withMessages(['team_name' => '団体名またはパスワードが違います。']);
+            throw ValidationException::withMessages(['email' => 'メールアドレスまたはパスワードが違います。']);
         }
 
         Auth::login($user, $request->boolean('remember'));
@@ -71,6 +72,6 @@ class TeamAuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('athletes.index')->with('status', '団体を登録しました。続けて所属選手を登録してください。次回からは団体名とパスワードでログインできます。');
+        return redirect()->route('athletes.index')->with('status', '団体を登録しました。続けて所属選手を登録してください。次回からは代表者のメールアドレスとパスワードでログインできます。');
     }
 }

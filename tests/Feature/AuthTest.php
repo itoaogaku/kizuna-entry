@@ -48,12 +48,12 @@ class AuthTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_team_opens_its_data_with_team_name_and_password(): void
+    public function test_team_opens_its_data_with_email_and_password(): void
     {
-        $team = User::factory()->create(['team_name' => '絆AC']);
+        $team = User::factory()->create(['team_name' => '絆AC', 'email' => 'team@example.com']);
         Athlete::factory()->for($team)->create(['last_name' => '青山']);
 
-        $this->post('/team/login', ['team_name' => ' 絆ＡＣ ', 'password' => 'password'])
+        $this->post('/team/login', ['email' => ' Team@Example.com ', 'password' => 'password'])
             ->assertRedirect(route('home'));
         $this->assertAuthenticatedAs($team);
 
@@ -62,19 +62,19 @@ class AuthTest extends TestCase
 
     public function test_team_login_fails_with_wrong_password(): void
     {
-        User::factory()->create(['team_name' => '絆AC']);
+        User::factory()->create(['team_name' => '絆AC', 'email' => 'team@example.com']);
 
-        $this->post('/team/login', ['team_name' => '絆AC', 'password' => 'wrong'])
-            ->assertSessionHasErrors('team_name');
+        $this->post('/team/login', ['email' => 'team@example.com', 'password' => 'wrong'])
+            ->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 
     public function test_individual_cannot_log_in_through_team_login(): void
     {
-        User::factory()->individual()->create(['team_name' => '〇〇大学']);
+        User::factory()->individual()->create(['team_name' => '〇〇大学', 'email' => 'solo@example.com']);
 
-        $this->post('/team/login', ['team_name' => '〇〇大学', 'password' => 'password'])
-            ->assertSessionHasErrors('team_name');
+        $this->post('/team/login', ['email' => 'solo@example.com', 'password' => 'password'])
+            ->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 
