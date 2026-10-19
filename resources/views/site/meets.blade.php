@@ -149,15 +149,4 @@
             電話番号 <a href="tel:{{ preg_replace('/[^0-9]/', '', $contact['phone']) }}">{{ $contact['phone'] }}</a>　
             メール <a href="mailto:{{ $contact['email'] }}">{{ $contact['email'] }}</a></p>
     </section>
-
-    <section class="cta">
-        <div>
-            <h2>エントリー方法は2通り</h2>
-            <p>何度も参加される方は<strong>Webエントリー</strong>が便利です。今までどおり<strong>エントリーシート（エクセル）を添付</strong>しての申し込みもできます。</p>
-        </div>
-        <div class="cta-actions">
-            <a class="btn btn-light" href="{{ route('home') }}">エントリーへ進む</a>
-            <a class="btn btn-outline-light" href="{{ asset('downloads/kizuna-entry-sheet.xlsx') }}" download>エントリーシートをダウンロード</a>
-        </div>
-    </section>
 @endsection
