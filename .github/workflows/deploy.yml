@@ -20,7 +20,7 @@ jobs:
       # サブドメインの公開フォルダ（ホームからの場所）。例：acckizuna.com/public_html/taikai.acckizuna.com
       DOCROOT: ${{ vars.XSERVER_DOCROOT }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
