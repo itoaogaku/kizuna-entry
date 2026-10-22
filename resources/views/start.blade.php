@@ -33,11 +33,6 @@
             </div>
         </div>
     </div>
-
-    <p class="muted">Webエントリーがはじめての方：
-        <a href="{{ route('team.register') }}">団体の新規登録</a>／
-        <a href="{{ route('individual.register') }}">個人の新規登録</a>
-    </p>
     <p class="muted">お支払いはクレジットカードまたはコンビニ払いです。参加料は申込締切日までにお支払いください（コンビニ払いはできる限りお申し込みの当日中に）。</p>
 
     @if ($meets->isNotEmpty())
