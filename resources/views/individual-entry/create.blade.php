@@ -25,7 +25,7 @@
             $a = $draft['athlete'] ?? [];
             $slots = old('events', $draft['events'] ?? []);
             $maxSlots = $meet->max_events_per_athlete;
-            $visible = min($maxSlots, max(2, count(array_filter($slots, fn ($s) => ($s['event_id'] ?? '') !== ''))));
+            $visible = min($maxSlots, max(1, count(array_filter($slots, fn ($s) => ($s['event_id'] ?? '') !== ''))));
         @endphp
         <form method="POST" action="{{ route('individual-entry.review') }}" class="card" id="individual-form">
             @csrf

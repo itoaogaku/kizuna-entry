@@ -39,10 +39,10 @@
                 <span class="muted" data-bulk-message></span>
             </div>
             @php
-                // 申込み種目の欄は最初2つだけ出し、「＋」で増やす（入力済みの欄があればそこまで出す）
+                // 申込み種目の欄は最初1つだけ出し、「＋」で増やす（入力済みの欄があればそこまで出す）
                 $maxSlots = $meet->max_events_per_athlete;
                 $usedSlots = collect($old)->map(fn ($r) => collect($r['events'] ?? [])->filter(fn ($e) => ($e['event_id'] ?? '') !== '' || ($e['record'] ?? '') !== '')->keys()->max())->filter(fn ($k) => $k !== null)->max();
-                $visibleSlots = min($maxSlots, max(2, $usedSlots === null ? 0 : $usedSlots + 1));
+                $visibleSlots = min($maxSlots, max(1, $usedSlots === null ? 0 : $usedSlots + 1));
             @endphp
             <div class="table-wrap">
                 <table>
@@ -54,7 +54,7 @@
                         @for ($i = 0; $i < $maxSlots; $i++)
                             <th data-slot-col="{{ $i }}" @if ($i >= $visibleSlots) hidden @endif>申込み種目{{ $maxSlots > 1 ? $i + 1 : '' }}<br><span class="muted">申請タイム</span></th>
                         @endfor
-                        @if ($maxSlots > 2)
+                        @if ($maxSlots > 1)
                             <th class="add-slot-col" @if ($visibleSlots >= $maxSlots) hidden @endif>
                                 <button type="button" class="btn secondary small" data-add-slot>＋ 種目を追加</button>
                             </th>
@@ -106,7 +106,7 @@
                                     </div>
                                 </td>
                             @endfor
-                            @if ($maxSlots > 2)
+                            @if ($maxSlots > 1)
                                 <td class="add-slot-col" @if ($visibleSlots >= $maxSlots) hidden @endif></td>
                             @endif
                             <td>

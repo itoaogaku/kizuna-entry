@@ -247,14 +247,15 @@ class EntryFlowTest extends TestCase
             ->assertDontSee('自己ベスト');
     }
 
-    public function test_entry_form_shows_two_event_columns_first_and_can_add_more(): void
+    public function test_entry_form_shows_one_event_column_first_and_can_add_more(): void
     {
         $this->meet->update(['max_events_per_athlete' => 4]);
         Athlete::factory()->for($this->team)->create();
 
         $html = $this->actingAs($this->team)->get(route('entries.create', $this->meet))->assertOk()
             ->assertSee('＋ 種目を追加')->getContent();
-        $this->assertMatchesRegularExpression('/<th data-slot-col="1"\s*>/', $html);
+        $this->assertMatchesRegularExpression('/<th data-slot-col="0"\s*>/', $html);
+        $this->assertMatchesRegularExpression('/<th data-slot-col="1"\s+hidden/', $html);
         $this->assertMatchesRegularExpression('/<th data-slot-col="2"\s+hidden/', $html);
         $this->assertMatchesRegularExpression('/<th data-slot-col="3"\s+hidden/', $html);
     }
