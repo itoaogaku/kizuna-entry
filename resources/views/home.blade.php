@@ -11,7 +11,6 @@
         <div class="flash warn">まだ選手が登録されていません。<a href="{{ route('athletes.index') }}">選手登録</a>から登録してください。</div>
     @endif
 
-
     <h2>エントリー受付中の大会</h2>
     @if ($meets->isEmpty())
         <p class="muted">現在、受付中・受付予定の大会はありません。</p>
