@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Athlete;
 use App\Rules\AthleteRules;
+use App\Services\AthleteTemplate;
 use App\Services\EntrySheetReader;
 use App\Services\GradeAdvance;
 use Illuminate\Http\RedirectResponse;
@@ -11,11 +12,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AthleteController extends Controller
 {
-    private const CSV_HEADER = ['姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '種別', '生年月日', '陸連登録番号'];
+    private const CSV_HEADER = ['姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '種別'];
 
     public function index(Request $request): View
     {
@@ -102,9 +104,21 @@ class AthleteController extends Controller
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, self::CSV_HEADER);
-            fputcsv($out, ['鈴木', '太郎', 'スズキ タロウ', '3', '男', '東京', '高校生', '', '']);
+            fputcsv($out, ['鈴木', '太郎', 'スズキ タロウ', '3', '男', '東京', '高校生']);
             fclose($out);
         }, 'athletes_template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * 選手登録用のエクセルシート（学年・性別などは選択式）。
+     */
+    public function templateWorkbook(AthleteTemplate $template): StreamedResponse
+    {
+        $book = $template->build();
+
+        return response()->streamDownload(function () use ($book) {
+            IOFactory::createWriter($book, 'Xlsx')->save('php://output');
+        }, '選手登録シート.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
 
     /**

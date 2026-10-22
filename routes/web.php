@@ -70,6 +70,7 @@ Route::middleware(['auth', 'not-admin'])->group(function () {
     Route::get('/athletes/import', [AthleteController::class, 'importForm'])->name('athletes.import');
     Route::post('/athletes/import', [AthleteController::class, 'import']);
     Route::get('/athletes/template.csv', [AthleteController::class, 'template'])->name('athletes.template');
+    Route::get('/athletes/template.xlsx', [AthleteController::class, 'templateWorkbook'])->name('athletes.template-xlsx');
     Route::resource('athletes', AthleteController::class)->except('show', 'destroy');
 
     // エントリー

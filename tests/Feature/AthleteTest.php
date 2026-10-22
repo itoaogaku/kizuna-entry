@@ -6,6 +6,8 @@ use App\Models\Athlete;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
@@ -112,5 +114,28 @@ class AthleteTest extends TestCase
             ->assertSessionHasErrors();
 
         $this->assertSame(0, $user->athletes()->count());
+    }
+
+    public function test_team_downloads_athlete_workbook_and_uploads_it_back(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('athletes.template-xlsx'))->assertOk();
+        $path = tempnam(sys_get_temp_dir(), 'athletes').'.xlsx';
+        file_put_contents($path, $response->streamedContent());
+        $book = IOFactory::load($path);
+        $sheet = $book->getSheetByName('選手登録');
+        $this->assertSame(['No', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '種別'], array_slice($sheet->rangeToArray('A4:H4')[0], 0, 8));
+        $this->assertSame(DataValidation::TYPE_LIST, $sheet->getCell('F6')->getDataValidation()->getType());
+
+        $sheet->fromArray(['高橋', '結衣', 'タカハシ ユイ', 'M1', '女', '学連', '大学生'], null, 'B6');
+        IOFactory::createWriter($book, 'Xlsx')->save($path);
+
+        $this->actingAs($user)->post(route('athletes.import'), [
+            'file' => new UploadedFile($path, '選手登録シート.xlsx', null, null, true),
+        ])->assertRedirect(route('athletes.index'));
+
+        $this->assertDatabaseHas('athletes', ['user_id' => $user->id, 'last_name' => '高橋', 'grade' => 'M1', 'gender' => 'F', 'association' => '学連', 'category' => '大学生']);
+        $this->assertSame(1, $user->athletes()->count()); // 記入例の行は登録しない
     }
 }
