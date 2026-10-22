@@ -36,7 +36,6 @@
             </ul>
             <div class="actions" style="margin-top:4px">
                 <a class="btn" href="{{ route('sheet.create') }}">エクセルを添付して申し込む</a>
-                <a class="btn secondary" href="{{ asset('downloads/kizuna-entry-sheet.xlsx') }}" download>シートをダウンロード</a>
             </div>
         </div>
     </div>
