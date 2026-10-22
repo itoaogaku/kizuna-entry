@@ -2,7 +2,11 @@
 @section('title', 'お申し込みの状態')
 
 @section('content')
-    @if ($entry->isPaid())
+    @if ($entry->isPaid() && $entry->isMemberFree())
+        <h1>エントリーを受け付けました</h1>
+        <div class="card"><p>{{ $entry->meet->name }}へのエントリーを、{{ $entry->membershipLabel() }}の無料枠で受け付けました（受付番号 {{ $entry->id }}）。確認メールを {{ $entry->user->email }} にお送りしました。</p>
+            <p class="muted">会員であること（シルバー会員は今年度の利用回数）は事務局で確認します。確認できない場合は、事務局からご連絡します。</p></div>
+    @elseif ($entry->isPaid())
         <h1>エントリーが完了しました</h1>
         <div class="card"><p>{{ $entry->meet->name }}へのエントリーと入金を確認しました（受付番号 {{ $entry->id }}）。確認メールを {{ $entry->user->email }} にお送りしました。領収書（PDF）も添付しています。</p>
             @if ($entry->receipt_number)<a class="btn secondary" href="{{ $entry->receiptUrl() }}" target="_blank">領収書（PDF）を表示</a>@endif</div>

@@ -39,6 +39,9 @@
                     <td>{{ $entry->paid_at?->format('Y/m/d H:i') }}</td>
                     <td>
                         {{ $entry->methodLabel() }}<br>
+                        @if ($entry->membership)
+                            <span class="badge pending">{{ $entry->membershipLabel() }}・会員確認</span><br>
+                        @endif
                         @if ($entry->payment_id && ! $entry->isKonbini())
                             <a href="https://dashboard.stripe.com/payments/{{ $entry->payment_id }}" target="_blank" rel="noopener">Stripeで見る</a>
                         @elseif ($entry->payment_id)

@@ -204,8 +204,8 @@ class EntryService
                 'status' => Entry::STATUS_PAID,
                 'payment_id' => $paymentId,
                 'paid_at' => now(),
-                // 領収書番号：入金年-受付番号（例：2026-000123）
-                'receipt_number' => now()->format('Y').'-'.str_pad((string) $fresh->id, 6, '0', STR_PAD_LEFT),
+                // 領収書番号：入金年-受付番号（例：2026-000123）。会員の無料枠など0円のときは領収書を出さない
+                'receipt_number' => $fresh->total_amount > 0 ? now()->format('Y').'-'.str_pad((string) $fresh->id, 6, '0', STR_PAD_LEFT) : null,
             ]);
 
             return true;

@@ -37,6 +37,10 @@ class EntryPaidMail extends Mailable
      */
     public function attachments(): array
     {
+        if (! $this->entry->receipt_number) {
+            return [];
+        }
+
         return [
             Attachment::fromData(fn () => app(ReceiptPdf::class)->render($this->entry), $this->entry->receiptFilename())
                 ->withMime('application/pdf'),

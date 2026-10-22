@@ -118,6 +118,15 @@
                 <input id="pr" type="text" name="pr" value="{{ old('pr', $draft['pr'] ?? '') }}" maxlength="100" placeholder="例：初の14分台を狙います">
             </div>
 
+            <h2>アスリートキャリアセンターの会員の方</h2>
+            <div class="field">
+                <label class="inline"><input type="radio" name="membership" value="" @checked(old('membership', $draft['membership'] ?? '') === '')> 会員ではない</label>
+                @foreach (\App\Models\Entry::MEMBERSHIPS as $value => $label)
+                    <label class="inline"><input type="radio" name="membership" value="{{ $value }}" @checked(old('membership', $draft['membership'] ?? '') === $value)> {{ $label }}</label>
+                @endforeach
+                <p class="hint">ゴールド会員・シルバー会員（年間2回まで）は参加料が無料です。会員であること・シルバー会員の今年度の利用回数は事務局で確認し、確認できない場合はご連絡します。</p>
+            </div>
+
             <h2>連絡先</h2>
             <div class="row">
                 <div class="field">

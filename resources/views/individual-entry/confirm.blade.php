@@ -14,6 +14,7 @@
             <dt>所属</dt><dd>{{ $draft['team_name'] ?: '―' }}</dd>
             <dt>連絡先</dt><dd>{{ $draft['email'] }}／{{ $draft['phone'] }}</dd>
             @if ($draft['pr'] ?? null)<dt>PRしたい一言</dt><dd>{{ $draft['pr'] }}</dd>@endif
+            @if ($draft['membership'] ?? null)<dt>会員区分</dt><dd>{{ \App\Models\Entry::MEMBERSHIPS[$draft['membership']] }}（参加料無料・事務局で会員確認）</dd>@endif
         </dl>
     </div>
 
@@ -32,6 +33,17 @@
     <div class="card" style="margin-top:16px">
         <form method="POST" action="{{ route('individual-entry.store') }}">
             @csrf
+            @if ($draft['membership'] ?? null)
+                <p><strong>会員の無料枠でお申し込みします（お支払いはありません）。</strong>会員であること・シルバー会員の今年度の利用回数は事務局で確認し、確認できない場合はご連絡します。</p>
+                <div class="field terms">
+                    <label class="inline"><input type="checkbox" name="terms" value="1" required>
+                        {{ \App\Services\GradeAdvance::fiscalYear() }}年度の日本陸上競技連盟の競技者登録を済ませています。</label>
+                </div>
+                <div class="actions">
+                    <button class="btn" type="submit">この内容で申し込む</button>
+                    <a class="btn secondary" href="{{ route('individual-entry.create', ['meet' => $meet->id]) }}">入力内容を直す</a>
+                </div>
+            @else
             @include('partials.pay-methods', ['methods' => $methods])
             <div class="actions">
                 @if ($methods !== [])
@@ -39,6 +51,7 @@
                 @endif
                 <a class="btn secondary" href="{{ route('individual-entry.create', ['meet' => $meet->id]) }}">入力内容を直す</a>
             </div>
+            @endif
         </form>
     </div>
 @endsection

@@ -7,6 +7,7 @@ use App\Models\Meet;
 use App\Models\User;
 use App\Payments\PaymentGateways;
 use App\Rules\AthleteRules;
+use App\Services\EntryService;
 use App\Services\SheetEntryService;
 use App\Support\RaceTime;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -26,7 +28,7 @@ class IndividualEntryController extends Controller
 {
     private const DRAFT = 'individual_entry_draft';
 
-    public function __construct(private SheetEntryService $sheets, private PaymentGateways $payments) {}
+    public function __construct(private SheetEntryService $sheets, private EntryService $entries, private PaymentGateways $payments) {}
 
     public function create(Request $request): View
     {
@@ -59,8 +61,9 @@ class IndividualEntryController extends Controller
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
             'pr' => ['nullable', 'string', 'max:100'],
+            'membership' => ['nullable', Rule::in(array_keys(Entry::MEMBERSHIPS))],
             'agree' => ['accepted'],
-        ], [], ['team_name' => '所属', 'email' => 'メールアドレス', 'phone' => '電話番号', 'agree' => '個人情報の取り扱いへの同意']);
+        ], [], ['membership' => '会員区分', 'team_name' => '所属', 'email' => 'メールアドレス', 'phone' => '電話番号', 'agree' => '個人情報の取り扱いへの同意']);
         $rules = AthleteRules::rules();
         $rules['category'][0] = 'required'; // 参加料が種別で決まるので必須
         Validator::make($athlete, $rules, [], ['last_name' => '姓', 'first_name' => '名', 'kana' => 'フリガナ', 'gender' => '性別', 'category' => '種別', 'grade' => '学年', 'association' => '所属陸協'])->validate();
@@ -70,7 +73,7 @@ class IndividualEntryController extends Controller
             return back()->withInput()->withErrors(['email' => 'このメールアドレスは団体のWebエントリーに登録されています。別のメールアドレスを入力するか、団体申し込みからお申し込みください。']);
         }
 
-        $rows = $this->rows($meet, $athlete, (array) $request->input('events', []), $contact['pr'] ?? null);
+        $rows = $this->rows($meet, $athlete, (array) $request->input('events', []), $contact['pr'] ?? null, $contact['membership'] ?? null);
 
         $request->session()->put(self::DRAFT, [
             'meet_id' => $meet->id,
@@ -93,7 +96,7 @@ class IndividualEntryController extends Controller
             'draft' => $draft,
             'rows' => $rows,
             'total' => collect($rows)->sum('fee'),
-            'methods' => PaymentGateways::available(),
+            'methods' => ($draft['membership'] ?? null) ? [] : PaymentGateways::available(),
             'receiptDefault' => $draft['athlete']['last_name'].' '.$draft['athlete']['first_name'],
         ]);
     }
@@ -110,8 +113,9 @@ class IndividualEntryController extends Controller
         if (! $request->boolean('terms')) {
             return redirect()->route('individual-entry.confirm')->withErrors(['terms' => '競技者登録と参加料についての確認にチェックを入れてください。']);
         }
-        $method = (string) $request->input('payment_method', Entry::METHOD_CARD);
-        if (! array_key_exists($method, PaymentGateways::available())) {
+        $membership = $draft['membership'] ?? null;
+        $method = $membership ? Entry::METHOD_MEMBER : (string) $request->input('payment_method', Entry::METHOD_CARD);
+        if (! $membership && ! array_key_exists($method, PaymentGateways::available())) {
             return redirect()->route('individual-entry.confirm')->withErrors(['payment_method' => 'お支払い方法を選んでください。']);
         }
 
@@ -120,8 +124,18 @@ class IndividualEntryController extends Controller
         } catch (ValidationException $e) {
             return redirect()->route('individual-entry.create', ['meet' => $meet->id])->withErrors($e->errors());
         }
-        $entry->update(['receipt_name' => mb_substr(trim((string) $request->input('receipt_name')), 0, 100) ?: null]);
+        $entry->update([
+            'membership' => $membership,
+            'receipt_name' => mb_substr(trim((string) $request->input('receipt_name')), 0, 100) ?: null,
+        ]);
         $request->session()->forget(self::DRAFT);
+
+        // 会員の無料枠は支払いなしで受付完了（会員確認は事務局）
+        if ($membership) {
+            $this->entries->markPaid($entry, null);
+
+            return redirect()->to(URL::signedRoute('sheet.status', $entry));
+        }
 
         try {
             $session = $this->payments->forEntry($entry)->createCheckout(
@@ -146,7 +160,7 @@ class IndividualEntryController extends Controller
      * @param  array<int, array{event_id?: mixed, record?: mixed}>  $input
      * @return list<array<string, mixed>>
      */
-    private function rows(Meet $meet, array $athlete, array $input, ?string $pr): array
+    private function rows(Meet $meet, array $athlete, array $input, ?string $pr, ?string $membership = null): array
     {
         $events = $meet->events()->get()->keyBy('id');
         $rows = [];
@@ -181,7 +195,8 @@ class IndividualEntryController extends Controller
                 'record' => $record,
                 'best' => null,
                 'pr' => $pr === null || trim($pr) === '' ? null : trim($pr),
-                'fee' => $meet->feeFor($athlete['category'] ?? null, $event),
+                // 会員の無料枠（会員かどうかは事務局が確認する）
+                'fee' => $membership ? 0 : $meet->feeFor($athlete['category'] ?? null, $event),
                 'errors' => [],
             ];
         }
@@ -209,7 +224,7 @@ class IndividualEntryController extends Controller
             return [null, [], []];
         }
 
-        return [$meet, $draft, $this->rows($meet, $draft['athlete'], $draft['events'], $draft['pr'] ?? null)];
+        return [$meet, $draft, $this->rows($meet, $draft['athlete'], $draft['events'], $draft['pr'] ?? null, $draft['membership'] ?? null)];
     }
 
     /**

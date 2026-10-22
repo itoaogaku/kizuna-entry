@@ -78,7 +78,8 @@ class AdminTest extends TestCase
 
     public function test_roster_lists_all_teams_by_target_time_then_personal_best(): void
     {
-        $admin = User::factory()->admin()->create();
+        // 管理画面のヘッダーに運営者名が出るので、選手名と重ならない名前にする
+        $admin = User::factory()->admin()->create(['name' => '運営', 'team_name' => '運営事務局']);
         $event = Event::factory()->create(['name' => '5000m', 'gender' => null]);
         $teamA = User::factory()->create(['team_name' => 'A大学']);
         $teamB = User::factory()->create(['team_name' => 'B高校']);
@@ -91,7 +92,7 @@ class AdminTest extends TestCase
         ];
         foreach ($rows as $row) {
             [$team, $name, $target, $best] = $row;
-            $athlete = Athlete::factory()->for($team)->create(['last_name' => $name]);
+            $athlete = Athlete::factory()->for($team)->create(['last_name' => $name, 'first_name' => '選手']);
             $entry = $team->entries()->create(['meet_id' => $event->meet_id, 'status' => $row[4] ?? Entry::STATUS_PAID, 'total_amount' => 2200]);
             $entry->items()->create(['athlete_id' => $athlete->id, 'event_id' => $event->id, 'fee' => 2200, 'declared_record' => $target, 'personal_best' => $best]);
         }

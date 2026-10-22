@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\EntryPaidMail;
 use App\Models\Entry;
 use App\Models\Event;
 use App\Models\Meet;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Payments\FakePaymentGateway;
 use App\Payments\PaymentGateways;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class IndividualEntryTest extends TestCase
@@ -96,5 +98,29 @@ class IndividualEntryTest extends TestCase
         User::factory()->create(['email' => 'suzuki@example.com']);
 
         $this->post(route('individual-entry.review'), $this->form())->assertSessionHasErrors('email');
+    }
+
+    public function test_gold_or_silver_member_enters_free_without_payment(): void
+    {
+        Mail::fake();
+
+        $this->post(route('individual-entry.review'), $this->form(['membership' => 'silver']))->assertRedirect(route('individual-entry.confirm'));
+        $this->get(route('individual-entry.confirm'))->assertOk()
+            ->assertSee('会員の無料枠でお申し込みします')->assertSee('0円')->assertDontSee('お支払い方法');
+
+        $response = $this->post(route('individual-entry.store'), ['terms' => '1']);
+
+        $entry = Entry::with('items')->sole();
+        $response->assertRedirectContains('/sheet-entry/'.$entry->id);
+        $this->assertSame(Entry::STATUS_PAID, $entry->status);
+        $this->assertSame(Entry::METHOD_MEMBER, $entry->payment_method);
+        $this->assertSame('silver', $entry->membership);
+        $this->assertSame(0, $entry->total_amount);
+        $this->assertSame(0, $entry->items[0]->fee);
+        $this->assertNull($entry->receipt_number); // 0円なので領収書は出さない
+        $this->assertSame([], $this->payments->sessions);
+        Mail::assertSent(EntryPaidMail::class, fn ($m) => $m->attachments() === []);
+
+        $this->get($entry->statusUrl())->assertOk()->assertSee('エントリーを受け付けました')->assertSee('シルバー会員');
     }
 }

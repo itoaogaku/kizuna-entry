@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\URL;
 
-#[Fillable(['meet_id', 'status', 'source', 'sheet_path', 'total_amount', 'payment_fee', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at', 'receipt_name', 'receipt_number'])]
+#[Fillable(['meet_id', 'status', 'source', 'sheet_path', 'total_amount', 'payment_fee', 'payment_method', 'payment_session_id', 'payment_id', 'payment_instructions_url', 'paid_at', 'receipt_name', 'receipt_number', 'membership'])]
 class Entry extends Model
 {
     use HasFactory;
@@ -23,6 +23,15 @@ class Entry extends Model
     public const METHOD_CARD = 'card';
 
     public const METHOD_KONBINI = 'konbini';
+
+    /** 会員の無料枠（支払いなし） */
+    public const METHOD_MEMBER = 'member';
+
+    /** アスリートキャリアセンターの会員（個人申し込みの無料枠）。会員かどうかは事務局が確認する */
+    public const MEMBERSHIPS = [
+        'gold' => 'ゴールド会員',
+        'silver' => 'シルバー会員（年間2回まで無料）',
+    ];
 
     public const SOURCE_WEB = 'web';
 
@@ -70,7 +79,21 @@ class Entry extends Model
 
     public function methodLabel(): string
     {
-        return $this->payment_method === self::METHOD_KONBINI ? 'コンビニ払い' : 'クレジットカード';
+        return match ($this->payment_method) {
+            self::METHOD_KONBINI => 'コンビニ払い',
+            self::METHOD_MEMBER => '会員無料枠',
+            default => 'クレジットカード',
+        };
+    }
+
+    public function isMemberFree(): bool
+    {
+        return $this->payment_method === self::METHOD_MEMBER;
+    }
+
+    public function membershipLabel(): ?string
+    {
+        return $this->membership ? (self::MEMBERSHIPS[$this->membership] ?? $this->membership) : null;
     }
 
     public function isKonbini(): bool
