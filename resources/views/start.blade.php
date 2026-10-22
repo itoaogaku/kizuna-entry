@@ -2,7 +2,9 @@
 
 @section('content')
     <h1>エントリー受付</h1>
-    @include('auth._separate-account')
+    @guest
+        @include('auth._separate-account')
+    @endguest
     <p>エントリー方法は <strong>2通り</strong> あります。どちらでも同じように受け付けます。</p>
 
     <div class="method-grid">
@@ -15,8 +17,13 @@
                 <li>「前回と同じ内容で申し込む」ボタンもあります</li>
             </ul>
             <div class="actions" style="margin-top:4px">
-                <a class="btn" href="{{ route('team.login') }}">団体申し込み</a>
-                <a class="btn" href="{{ route('individual.login') }}">個人申し込み</a>
+                @if ($user && ! $user->is_admin)
+                    <a class="btn" href="{{ route('entry.web') }}">Webエントリーへ進む</a>
+                    <span class="muted">ログイン中：{{ $user->displayName() }}（{{ $user->typeLabel() }}）</span>
+                @else
+                    <a class="btn" href="{{ route('team.login') }}">団体申し込み</a>
+                    <a class="btn" href="{{ route('individual.login') }}">個人申し込み</a>
+                @endif
             </div>
         </div>
         <div class="method">

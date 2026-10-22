@@ -170,7 +170,7 @@ class EntryFlowTest extends TestCase
         $meet = Meet::factory()->closed()->create();
 
         $this->actingAs($this->team)->get(route('entries.create', $meet))
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('entry.web'));
     }
 
     public function test_returning_from_stripe_marks_paid_and_sends_mail_once(): void

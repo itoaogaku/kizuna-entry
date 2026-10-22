@@ -19,6 +19,6 @@
     @endif
     <div class="actions">
         <a class="btn" href="{{ route('entries.show', $entry) }}">エントリー内容を見る</a>
-        <a class="btn secondary" href="{{ route('home') }}">トップへ</a>
+        <a class="btn secondary" href="{{ route('entry.web') }}">申込データへ</a>
     </div>
 @endsection

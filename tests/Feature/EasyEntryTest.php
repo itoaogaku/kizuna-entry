@@ -55,7 +55,7 @@ class EasyEntryTest extends TestCase
         $master = Athlete::factory()->for($team)->create(['category' => '大学生', 'grade' => 'M1']);
         $masterDone = Athlete::factory()->for($team)->create(['category' => '大学生', 'grade' => 'M2']);
 
-        $this->actingAs($team)->get('/entry')->assertSee('新年度になりました');
+        $this->actingAs($team)->get(route('entry.web'))->assertSee('新年度になりました');
         $this->actingAs($team)->get(route('athletes.advance'))->assertOk()->assertSee('高校生 3年');
 
         $this->actingAs($team)->post(route('athletes.advance'), ['choices' => [

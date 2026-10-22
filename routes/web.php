@@ -63,6 +63,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 
 // 選手登録・エントリー（申込者用。運営アカウントは管理画面へ戻す）
 Route::middleware(['auth', 'not-admin'])->group(function () {
+    Route::get('/entry/web', [HomeController::class, 'web'])->name('entry.web');
 
     // 選手の初期登録
     Route::get('/athletes/advance', [AthleteController::class, 'advanceForm'])->name('athletes.advance');

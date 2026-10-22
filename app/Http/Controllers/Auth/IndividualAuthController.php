@@ -39,7 +39,7 @@ class IndividualAuthController extends Controller
             return redirect()->route('admin.meets.index');
         }
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(route('entry.web'));
     }
 
     public function registerForm(): View
@@ -75,6 +75,6 @@ class IndividualAuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('home')->with('status', '登録しました。出場する大会を選んでください。次回からはメールアドレスとパスワードでログインできます。');
+        return redirect()->route('entry.web')->with('status', '登録しました。出場する大会を選んでください。次回からはメールアドレスとパスワードでログインできます。');
     }
 }

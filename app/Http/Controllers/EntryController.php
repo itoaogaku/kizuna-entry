@@ -271,7 +271,7 @@ class EntryController extends Controller
             return null;
         }
 
-        return redirect()->route('home')->withErrors(['meet' => $meet->name.'は現在エントリーを受け付けていません。']);
+        return redirect()->route('entry.web')->withErrors(['meet' => $meet->name.'は現在エントリーを受け付けていません。']);
     }
 
     private function authorizeOwner(Request $request, Entry $entry): void

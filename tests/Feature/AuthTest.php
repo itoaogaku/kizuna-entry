@@ -54,7 +54,7 @@ class AuthTest extends TestCase
         Athlete::factory()->for($team)->create(['last_name' => '青山']);
 
         $this->post('/team/login', ['email' => ' Team@Example.com ', 'password' => 'password'])
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('entry.web'));
         $this->assertAuthenticatedAs($team);
 
         $this->get(route('athletes.index'))->assertSee('青山');
@@ -90,7 +90,7 @@ class AuthTest extends TestCase
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'agree' => '1',
-        ])->assertRedirect(route('home'));
+        ])->assertRedirect(route('entry.web'));
 
         $user = User::sole();
         $this->assertAuthenticatedAs($user);
@@ -105,7 +105,7 @@ class AuthTest extends TestCase
         $user = User::factory()->individual()->create(['email' => 'solo@example.com']);
 
         $this->post('/individual/login', ['email' => 'solo@example.com', 'password' => 'password'])
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('entry.web'));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -137,5 +137,16 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
             'agree' => '1',
         ];
+    }
+
+    public function test_entry_button_always_opens_method_choice_even_after_login(): void
+    {
+        $team = User::factory()->create(['team_name' => '絆AC']);
+
+        $this->actingAs($team)->get(route('home'))->assertOk()
+            ->assertSee('エクセルを添付して申し込む')
+            ->assertSee('Webエントリーへ進む')
+            ->assertSee(route('entry.web'));
+        $this->actingAs($team)->get(route('entry.web'))->assertOk()->assertSee('絆AC');
     }
 }

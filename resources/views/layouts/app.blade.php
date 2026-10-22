@@ -27,7 +27,7 @@
         </a>
         <nav>
             <a href="{{ route('site.meets') }}" @class(['current' => request()->routeIs('site.meets')])>大会開催</a>
-            <a href="{{ route('home') }}" @class(['current' => request()->routeIs('home')])>エントリー</a>
+            <a href="{{ route('home') }}" @class(['current' => request()->routeIs('home', 'entry.web')])>エントリー</a>
             @auth
                 @if (auth()->user()->is_admin)
                     <a href="{{ route('admin.meets.index') }}">管理画面へ戻る</a>

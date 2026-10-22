@@ -42,7 +42,7 @@ class TeamAuthController extends Controller
             return redirect()->route('admin.meets.index');
         }
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(route('entry.web'));
     }
 
     public function registerForm(): View
