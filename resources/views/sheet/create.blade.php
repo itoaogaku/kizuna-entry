@@ -5,7 +5,7 @@
     <h1>エクセル（エントリーシート）を添付してエントリー</h1>
     <div class="card">
         <ol class="steps">
-            <li><a href="{{ asset('downloads/kizuna-entry-sheet.xlsx') }}" download>エントリーシート（.xlsx）</a>をダウンロードし、「申込み」シートに記入します。<span class="muted">今までお使いのシートでも大丈夫です。</span></li>
+            <li><a href="{{ asset('downloads/kizuna-entry-sheet.xlsx') }}" download>エントリーシート（.xlsx）</a>をダウンロードし、「申込み」シートに記入します。</li>
             <li>下のフォームで大会を選び、記入したシートを添付します。</li>
             <li>読み込んだ内容を確認して、お支払い（カードまたはコンビニ）に進みます。入金を確認した時点でエントリー完了です。</li>
         </ol>
