@@ -32,9 +32,9 @@
                 @if (auth()->user()->is_admin)
                     <a href="{{ route('admin.meets.index') }}">管理画面へ戻る</a>
                 @else
-                    <span class="who">{{ auth()->user()->displayName() }}（{{ auth()->user()->typeLabel() }}）</span>
                     <a href="{{ route('athletes.index') }}">{{ auth()->user()->isTeam() ? '選手登録' : '登録情報' }}</a>
                     <a href="{{ route('entries.index') }}">エントリー履歴</a>
+                    <span class="who">{{ auth()->user()->displayName() }}（{{ auth()->user()->typeLabel() }}）</span>
                 @endif
                 <form method="POST" action="{{ route('logout') }}" class="inline-form">
                     @csrf
