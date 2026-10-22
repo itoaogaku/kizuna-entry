@@ -10,7 +10,7 @@
             @if ($meet->notes)
                 <p class="muted" style="white-space:pre-line">{{ $meet->notes }}</p>
             @endif
-            @auth
+            @if (auth()->check() && ($actions ?? true))
                 <div class="actions">
                     @if ($meet->isAcceptingEntries())
                         <a class="btn" href="{{ route('entries.create', $meet) }}">エントリーする</a>
@@ -20,7 +20,7 @@
                         <span class="badge">受付終了</span>
                     @endif
                 </div>
-            @endauth
+            @endif
         </div>
     @endforeach
 </div>

@@ -56,6 +56,6 @@
 
     @if ($meets->isNotEmpty())
         <h2>受付中・受付予定の大会</h2>
-        @include('partials.meet-list', ['meets' => $meets])
+        @include('partials.meet-list', ['meets' => $meets, 'actions' => false])
     @endif
 @endsection
