@@ -45,7 +45,7 @@ class MeetController extends Controller
             'fee_general' => $source?->fee_general,
         ]);
         $events = $source
-            ? $source->events->map(fn ($e) => $e->only(['name', 'gender', 'fee', 'capacity']))->all()
+            ? $source->events->map(fn ($e) => $e->only(['name', 'gender', 'capacity']))->all()
             : [];
 
         return view('admin.meets.form', [
@@ -59,8 +59,7 @@ class MeetController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
-        $categoryFees = ($data['fee_junior_high'] ?? null) !== null || ($data['fee_student'] ?? null) !== null || ($data['fee_general'] ?? null) !== null;
-        $events = $this->validatedEvents($request, $categoryFees);
+        $events = $this->validatedEvents($request);
 
         $meet = DB::transaction(function () use ($data, $events) {
             $meet = Meet::create($data);
@@ -102,9 +101,11 @@ class MeetController extends Controller
     /**
      * 新規登録画面の種目欄。種目名が空の行は使わない。
      *
+     * 参加料は大会の区分別の参加料で決まるので、種目ごとの料金は持たない。
+     *
      * @return array<int, array{name: string, gender: ?string, fee: int, capacity: ?int}>
      */
-    private function validatedEvents(Request $request, bool $categoryFees = false): array
+    private function validatedEvents(Request $request): array
     {
         $rows = collect((array) $request->input('events', []))
             ->filter(fn ($row) => trim((string) ($row['name'] ?? '')) !== '')
@@ -115,21 +116,18 @@ class MeetController extends Controller
             'events' => ['array'],
             'events.*.name' => ['required', 'string', 'max:100', 'distinct'],
             'events.*.gender' => ['nullable', Rule::in(['M', 'F'])],
-            'events.*.fee' => $categoryFees ? ['nullable', 'integer', 'min:0', 'max:100000'] : ['required', 'integer', 'min:50', 'max:100000'],
             'events.*.capacity' => ['nullable', 'integer', 'min:1'],
         ], [
             'events.*.name.distinct' => '種目名「:input」が重複しています。',
-            'events.*.fee.required' => '種目「:position」番目の料金を入力してください。',
         ], [
             'events.*.name' => '種目名',
-            'events.*.fee' => '料金',
             'events.*.capacity' => '定員',
         ])->validate()['events'] ?? [];
 
         return array_map(fn ($e) => [
             'name' => trim($e['name']),
             'gender' => $e['gender'] ?? null,
-            'fee' => (int) ($e['fee'] ?? 0),
+            'fee' => 0,
             'capacity' => isset($e['capacity']) && $e['capacity'] !== '' ? (int) $e['capacity'] : null,
         ], $validated);
     }
@@ -155,8 +153,8 @@ class MeetController extends Controller
             'division' => ['nullable', 'string', 'max:50'],
             'start_time' => ['nullable', 'date_format:H:i'],
             'fee_junior_high' => ['nullable', 'integer', 'min:50', 'max:100000'],
-            'fee_student' => ['nullable', 'integer', 'min:50', 'max:100000'],
-            'fee_general' => ['nullable', 'integer', 'min:50', 'max:100000'],
+            'fee_student' => ['required', 'integer', 'min:50', 'max:100000'],
+            'fee_general' => ['required', 'integer', 'min:50', 'max:100000'],
             'eligible' => ['nullable', 'string', 'max:100'],
         ];
         $data = $request->validate($rules, [], [

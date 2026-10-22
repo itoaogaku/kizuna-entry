@@ -75,10 +75,11 @@ class Meet extends Model
         if (! $this->hasCategoryFees()) {
             return (int) $event->fee;
         }
+        // 中学生の料金がない大会（中学生の部がない種目）に中学生が出る場合は、高校生・大学生の料金で受け付ける
         $fee = match ($category) {
-            '中学生' => $this->fee_junior_high,
-            '高校生', '大学生' => $this->fee_student,
-            default => $this->fee_general,
+            '中学生' => $this->fee_junior_high ?? $this->fee_student ?? $this->fee_general,
+            '高校生', '大学生' => $this->fee_student ?? $this->fee_general,
+            default => $this->fee_general ?? $this->fee_student,
         };
 
         return (int) ($fee ?? $event->fee);

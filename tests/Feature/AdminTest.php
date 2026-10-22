@@ -30,16 +30,22 @@ class AdminTest extends TestCase
             'entry_opens_at' => '2026-10-20T00:00',
             'entry_closes_at' => '2026-11-20T23:59',
             'max_events_per_athlete' => 2,
+            'fee_student' => 2200, 'fee_general' => 3300,
             'is_published' => '1',
         ])->assertRedirect();
         $meet = Meet::sole();
 
         $this->actingAs($admin)->post(route('admin.events.store', $meet), [
-            'name' => '一般男子5000m', 'gender' => 'M', 'fee' => 2000, 'capacity' => 60,
+            'name' => '一般男子5000m', 'gender' => 'M', 'capacity' => 60,
         ])->assertRedirect();
 
         $this->assertTrue($meet->is_published);
-        $this->assertDatabaseHas('events', ['meet_id' => $meet->id, 'name' => '一般男子5000m', 'fee' => 2000, 'capacity' => 60]);
+        $this->assertDatabaseHas('events', ['meet_id' => $meet->id, 'name' => '一般男子5000m', 'capacity' => 60]);
+        // 中学生の料金が空欄なら、中学生は高校生・大学生の料金
+        $event = $meet->events()->sole();
+        $this->assertSame(2200, $meet->fresh()->feeFor('中学生', $event));
+        $this->assertSame(2200, $meet->fresh()->feeFor('大学生', $event));
+        $this->assertSame(3300, $meet->fresh()->feeFor('一般', $event));
     }
 
     public function test_excel_export_uses_entry_sheet_columns_sorted_by_declared_time(): void
@@ -128,7 +134,7 @@ class AdminTest extends TestCase
             ->assertSee('value="第10回 絆記録会"', false)
             ->assertSee('value="絆競技場"', false)
             ->assertSee('value="5000m"', false)
-            ->assertSee('value="2200"', false);
+            ->assertDontSee('料金（円）');
 
         $this->actingAs($admin)->post(route('admin.meets.store'), [
             'name' => '第10回 絆記録会',
@@ -136,21 +142,22 @@ class AdminTest extends TestCase
             'entry_opens_at' => '2026-10-20T00:00',
             'entry_closes_at' => '2026-11-20T23:59',
             'max_events_per_athlete' => 2,
+            'fee_junior_high' => 1500, 'fee_student' => 2200, 'fee_general' => 3300,
             'is_published' => '1',
             'events' => [
-                ['name' => '5000m', 'gender' => '', 'fee' => '2200', 'capacity' => '120'],
-                ['name' => '1500m', 'gender' => '', 'fee' => '2000', 'capacity' => ''],
-                ['name' => '', 'gender' => '', 'fee' => '', 'capacity' => ''],
+                ['name' => '5000m', 'gender' => '', 'capacity' => '120'],
+                ['name' => '1500m', 'gender' => '', 'capacity' => ''],
+                ['name' => '', 'gender' => '', 'capacity' => ''],
             ],
         ])->assertRedirect();
 
         $meet = Meet::where('name', '第10回 絆記録会')->sole();
         $this->assertSame(['5000m', '1500m'], $meet->events->pluck('name')->all());
         $this->assertNull($meet->events[1]->capacity);
-        $this->assertSame(2000, $meet->events[1]->fee);
+        $this->assertSame(1500, $meet->feeFor('中学生', $meet->events[1]));
     }
 
-    public function test_new_meet_rejects_events_without_fee(): void
+    public function test_new_meet_requires_category_fees(): void
     {
         $admin = User::factory()->admin()->create();
 
@@ -158,8 +165,8 @@ class AdminTest extends TestCase
             'name' => '第1回', 'held_on' => '2026-12-06',
             'entry_opens_at' => '2026-10-20T00:00', 'entry_closes_at' => '2026-11-20T23:59',
             'max_events_per_athlete' => 2,
-            'events' => [['name' => '5000m', 'fee' => '']],
-        ])->assertSessionHasErrors();
+            'events' => [['name' => '5000m']],
+        ])->assertSessionHasErrors(['fee_student', 'fee_general']);
 
         $this->assertDatabaseCount('meets', 0);
     }

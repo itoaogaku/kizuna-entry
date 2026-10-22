@@ -33,7 +33,7 @@
 
     <div class="table-wrap">
         <table>
-            <thead><tr><th>順</th><th>種目名</th><th>性別</th><th>料金（円）</th><th>定員</th><th class="num">申込数</th><th></th></tr></thead>
+            <thead><tr><th>順</th><th>種目名</th><th>性別</th><th>定員</th><th class="num">申込数</th><th></th></tr></thead>
             <tbody>
             @foreach ($meet->events as $event)
                 <tr>
@@ -46,7 +46,6 @@
                             <option value="F" @selected($event->gender === 'F')>女子</option>
                         </select>
                     </td>
-                    <td><input form="event-{{ $event->id }}" type="number" name="fee" value="{{ $event->fee ?: '' }}" min="0" style="width:100px" @unless ($meet->hasCategoryFees()) required @endunless placeholder="{{ $meet->hasCategoryFees() ? '区分別' : '' }}"></td>
                     <td><input form="event-{{ $event->id }}" type="number" name="capacity" value="{{ $event->capacity }}" min="1" style="width:90px"></td>
                     <td class="num">{{ $reserved[$event->id] }}</td>
                     <td>
@@ -65,7 +64,6 @@
                         <option value="F">女子</option>
                     </select>
                 </td>
-                <td><input form="event-new" type="number" name="fee" min="0" style="width:100px" @unless ($meet->hasCategoryFees()) required @endunless placeholder="{{ $meet->hasCategoryFees() ? '区分別' : '' }}"></td>
                 <td><input form="event-new" type="number" name="capacity" min="1" style="width:90px"></td>
                 <td></td>
                 <td><button form="event-new" class="btn small" type="submit">追加</button></td>

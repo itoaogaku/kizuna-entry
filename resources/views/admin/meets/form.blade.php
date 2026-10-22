@@ -57,11 +57,11 @@
                 @foreach (\App\Models\Meet::FEE_LABELS as $key => $label)
                     <div class="field">
                         <label for="{{ $key }}">参加料：{{ $label }}（円）</label>
-                        <input id="{{ $key }}" type="number" name="{{ $key }}" value="{{ old($key, $meet->{$key}) }}" min="0" placeholder="例：{{ ['fee_junior_high' => 1500, 'fee_student' => 2200, 'fee_general' => 3300][$key] }}">
+                        <input id="{{ $key }}" type="number" name="{{ $key }}" value="{{ old($key, $meet->{$key}) }}" min="50" @if ($key !== 'fee_junior_high') required @endif placeholder="例：{{ ['fee_junior_high' => 1500, 'fee_student' => 2200, 'fee_general' => 3300][$key] }}">
                     </div>
                 @endforeach
             </div>
-            <p class="hint" style="margin-top:-8px">区分別の参加料を入れると、種目の料金より優先されます（1種目ごと）。空欄なら種目ごとの料金を使います。</p>
+            <p class="hint" style="margin-top:-8px">参加料は1種目ごとの金額で、種目に関係なく区分で決まります。中学生の料金が空欄の場合、中学生は高校生・大学生の料金で受け付けます。</p>
             <div class="row">
                 <div class="field">
                     <label for="division">部門</label>
@@ -87,11 +87,11 @@
                     $rows = old('events', $events);
                     $rows = array_merge(array_values($rows), array_fill(0, max(3, 8 - count($rows)), []));
                 @endphp
-                <h2>種目・料金</h2>
-                <p class="muted">種目名が空の行は登録されません。区分別の参加料を入れた場合、種目の料金は空欄で構いません。登録後も、大会の画面から種目の追加・変更ができます。</p>
+                <h2>種目</h2>
+                <p class="muted">種目名が空の行は登録されません。登録後も、大会の画面から種目の追加・変更ができます。</p>
                 <div class="table-wrap">
                     <table data-events>
-                        <thead><tr><th>種目名</th><th>性別</th><th>料金（円）</th><th>定員 <span class="muted">空欄＝無制限</span></th></tr></thead>
+                        <thead><tr><th>種目名</th><th>性別</th><th>定員 <span class="muted">空欄＝無制限</span></th></tr></thead>
                         <tbody>
                         @foreach ($rows as $i => $row)
                             <tr>
@@ -103,7 +103,6 @@
                                         <option value="F" @selected(($row['gender'] ?? null) === 'F')>女子</option>
                                     </select>
                                 </td>
-                                <td><input type="number" name="events[{{ $i }}][fee]" value="{{ $row['fee'] ?? '' }}" min="50" style="width:110px" aria-label="料金"></td>
                                 <td><input type="number" name="events[{{ $i }}][capacity]" value="{{ $row['capacity'] ?? '' }}" min="1" style="width:100px" aria-label="定員"></td>
                             </tr>
                         @endforeach

@@ -40,13 +40,10 @@ class EventController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'gender' => ['nullable', Rule::in(['M', 'F'])],
-            // 区分別の参加料がある大会では種目の料金は使わないので空欄でよい（Stripeの最低決済額は50円）
-            'fee' => $meet->hasCategoryFees() ? ['nullable', 'integer', 'min:0', 'max:100000'] : ['required', 'integer', 'min:50', 'max:100000'],
             'capacity' => ['nullable', 'integer', 'min:1'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
         $data['gender'] = $data['gender'] ?? null;
-        $data['fee'] = (int) ($data['fee'] ?? 0);
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
         return $data;
