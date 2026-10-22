@@ -246,4 +246,16 @@ class EntryFlowTest extends TestCase
             ->assertSee(json_encode(['一般男子5000m' => "14'55"], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), false)
             ->assertDontSee('自己ベスト');
     }
+
+    public function test_entry_form_shows_two_event_columns_first_and_can_add_more(): void
+    {
+        $this->meet->update(['max_events_per_athlete' => 4]);
+        Athlete::factory()->for($this->team)->create();
+
+        $html = $this->actingAs($this->team)->get(route('entries.create', $this->meet))->assertOk()
+            ->assertSee('＋ 種目を追加')->getContent();
+        $this->assertMatchesRegularExpression('/<th data-slot-col="1"\s*>/', $html);
+        $this->assertMatchesRegularExpression('/<th data-slot-col="2"\s+hidden/', $html);
+        $this->assertMatchesRegularExpression('/<th data-slot-col="3"\s+hidden/', $html);
+    }
 }

@@ -38,6 +38,12 @@
                 <button class="btn small secondary" type="button" data-bulk-apply>チェックした選手に設定</button>
                 <span class="muted" data-bulk-message></span>
             </div>
+            @php
+                // 申込み種目の欄は最初2つだけ出し、「＋」で増やす（入力済みの欄があればそこまで出す）
+                $maxSlots = $meet->max_events_per_athlete;
+                $usedSlots = collect($old)->map(fn ($r) => collect($r['events'] ?? [])->filter(fn ($e) => ($e['event_id'] ?? '') !== '' || ($e['record'] ?? '') !== '')->keys()->max())->filter(fn ($k) => $k !== null)->max();
+                $visibleSlots = min($maxSlots, max(2, $usedSlots === null ? 0 : $usedSlots + 1));
+            @endphp
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -45,9 +51,14 @@
                         <th class="sticky-col">出場・氏名</th>
                         <th>性別</th>
                         <th>種別・学年</th>
-                        @for ($i = 0; $i < $meet->max_events_per_athlete; $i++)
-                            <th>申込み種目{{ $meet->max_events_per_athlete > 1 ? $i + 1 : '' }}<br><span class="muted">申請タイム</span></th>
+                        @for ($i = 0; $i < $maxSlots; $i++)
+                            <th data-slot-col="{{ $i }}" @if ($i >= $visibleSlots) hidden @endif>申込み種目{{ $maxSlots > 1 ? $i + 1 : '' }}<br><span class="muted">申請タイム</span></th>
                         @endfor
+                        @if ($maxSlots > 2)
+                            <th class="add-slot-col" @if ($visibleSlots >= $maxSlots) hidden @endif>
+                                <button type="button" class="btn secondary small" data-add-slot>＋ 種目を追加</button>
+                            </th>
+                        @endif
                         <th>PRしたい一言 <span class="muted">（任意・実況で使用）</span></th>
                     </tr>
                     </thead>
@@ -70,9 +81,9 @@
                             </td>
                             <td>{{ $athlete->genderLabel() }}</td>
                             <td>{{ $athlete->category }}{{ $athlete->grade ? ' '.$athlete->gradeLabel() : '' }}</td>
-                            @for ($i = 0; $i < $meet->max_events_per_athlete; $i++)
+                            @for ($i = 0; $i < $maxSlots; $i++)
                                 @php $slot = $row['events'][$i] ?? []; @endphp
-                                <td class="slot">
+                                <td class="slot" data-slot-col="{{ $i }}" @if ($i >= $visibleSlots) hidden @endif>
                                     <select name="items[{{ $athlete->id }}][events][{{ $i }}][event_id]" data-event aria-label="申込み種目">
                                         <option value="">―</option>
                                         @foreach ($events as $event)
@@ -95,6 +106,9 @@
                                     </div>
                                 </td>
                             @endfor
+                            @if ($maxSlots > 2)
+                                <td class="add-slot-col" @if ($visibleSlots >= $maxSlots) hidden @endif></td>
+                            @endif
                             <td>
                                 <input type="text" name="items[{{ $athlete->id }}][pr]" value="{{ $row['pr'] ?? '' }}" maxlength="100"
                                        placeholder="例：チーム内No.1の練習量" aria-label="PRしたい一言" class="pr">
@@ -142,6 +156,18 @@
         if (d.length >= 5) { main = d.slice(0, -2); frac = '"' + d.slice(-2); }
         return String(Number(main.slice(0, -2))) + "'" + main.slice(-2) + frac;
     };
+    // 申込み種目の欄を1つずつ増やす（全選手まとめて）
+    const showSlot = col => {
+        form.querySelectorAll(`[data-slot-col="${col}"]`).forEach(el => { el.hidden = false; });
+        if (!form.querySelector('[data-slot-col][hidden]')) {
+            form.querySelectorAll('.add-slot-col').forEach(el => { el.hidden = true; });
+        }
+    };
+    form.querySelector('[data-add-slot]')?.addEventListener('click', () => {
+        const next = form.querySelector('th[data-slot-col][hidden]');
+        if (next) showSlot(next.dataset.slotCol);
+    });
+
     form.addEventListener('focusout', e => {
         if (e.target.matches('[data-record]')) e.target.value = formatTime(e.target.value);
     });
@@ -161,6 +187,8 @@
             const option = target?.querySelector(`option[value="${eventId}"]`);
             if (!target || !option || option.disabled) { skipped++; return; }
             target.value = eventId;
+            const cell = target.closest('[data-slot-col]');
+            if (cell.hidden) showSlot(cell.dataset.slotCol);
             target.dispatchEvent(new Event('change', { bubbles: true }));
             applied++;
         });
