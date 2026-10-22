@@ -11,7 +11,6 @@
         <div class="flash warn">まだ選手が登録されていません。<a href="{{ route('athletes.index') }}">選手登録</a>から登録してください。</div>
     @endif
 
-    <p class="muted">エクセル（エントリーシート）で申し込みたい場合は、<a href="{{ route('sheet.create') }}">エクセルを添付して申し込む</a>こともできます。</p>
 
     <h2>エントリー受付中の大会</h2>
     @if ($meets->isEmpty())
