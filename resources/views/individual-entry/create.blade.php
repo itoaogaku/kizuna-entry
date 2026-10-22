@@ -120,9 +120,9 @@
 
             <h2>アスリートキャリアセンターの会員の方</h2>
             <div class="field">
-                <label class="inline"><input type="radio" name="membership" value="" @checked(old('membership', $draft['membership'] ?? '') === '')> 会員ではない</label>
+                {{-- 会員の方だけチェック（どちらか1つ。もう一度押すと外れる） --}}
                 @foreach (\App\Models\Entry::MEMBERSHIPS as $value => $label)
-                    <label class="inline"><input type="radio" name="membership" value="{{ $value }}" @checked(old('membership', $draft['membership'] ?? '') === $value)> {{ $label }}</label>
+                    <label class="inline"><input type="checkbox" name="membership" value="{{ $value }}" data-membership @checked(old('membership', $draft['membership'] ?? '') === $value)> {{ $label }}</label>
                 @endforeach
                 <p class="hint">ゴールド会員・シルバー会員（年間2回まで）は参加料が無料です。会員であること・シルバー会員の今年度の利用回数は事務局で確認し、確認できない場合はご連絡します。</p>
             </div>
@@ -155,6 +155,10 @@
         if (next) next.hidden = false;
         if (!form.querySelector('[data-slot][hidden]')) add.hidden = true;
     });
+    // 会員区分はどちらか1つだけ
+    form.querySelectorAll('[data-membership]').forEach(box => box.addEventListener('change', () => {
+        if (box.checked) form.querySelectorAll('[data-membership]').forEach(other => { if (other !== box) other.checked = false; });
+    }));
     // 性別に合わない種目は選べないようにする
     const syncGender = () => {
         const gender = form.querySelector('input[name="gender"]:checked')?.value;
