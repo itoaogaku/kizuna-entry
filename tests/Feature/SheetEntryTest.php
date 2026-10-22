@@ -97,7 +97,7 @@ class SheetEntryTest extends TestCase
     public function test_first_screen_explains_two_ways_to_enter(): void
     {
         $this->get('/entry')->assertOk()
-            ->assertSee('エントリー方法は')
+            ->assertSee('団体でお申し込み')
             ->assertSee('Webでエントリー')
             ->assertSee('エクセル（エントリーシート）を添付')
             ->assertSee(route('sheet.create'));

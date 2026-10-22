@@ -15,10 +15,10 @@ class AuthTest extends TestCase
     {
         $this->get('/entry')
             ->assertOk()
-            ->assertSee('団体申し込み')
-            ->assertSee('個人申し込み')
+            ->assertSee('団体でお申し込み')
+            ->assertSee('個人でお申し込み')
             ->assertSee(route('team.login'))
-            ->assertSee(route('individual.login'));
+            ->assertSee(route('individual-entry.create'));
     }
 
     public function test_pages_requiring_login_send_guests_to_the_first_screen(): void

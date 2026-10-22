@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\TeamAuthController;
 use App\Http\Controllers\EntryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IndividualEntryController;
 use App\Http\Controllers\KomojuWebhookController;
 use App\Http\Controllers\PressController;
 use App\Http\Controllers\SheetEntryController;
@@ -28,6 +29,14 @@ Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.web
 Route::post('/komoju/webhook', KomojuWebhookController::class)->name('komoju.webhook');
 
 // エクセル添付でのエントリー（ログインなしでも使える）
+// 個人申し込み（ログインなし・フォーム入力）
+Route::middleware('not-admin')->group(function () {
+    Route::get('/individual-entry', [IndividualEntryController::class, 'create'])->name('individual-entry.create');
+    Route::post('/individual-entry', [IndividualEntryController::class, 'review'])->middleware('throttle:20,1')->name('individual-entry.review');
+    Route::get('/individual-entry/confirm', [IndividualEntryController::class, 'confirm'])->name('individual-entry.confirm');
+    Route::post('/individual-entry/confirm', [IndividualEntryController::class, 'store'])->name('individual-entry.store');
+});
+
 Route::get('/sheet-entry', [SheetEntryController::class, 'create'])->name('sheet.create');
 Route::post('/sheet-entry', [SheetEntryController::class, 'upload'])->middleware('throttle:20,1')->name('sheet.upload');
 Route::get('/sheet-entry/confirm', [SheetEntryController::class, 'preview'])->name('sheet.preview');

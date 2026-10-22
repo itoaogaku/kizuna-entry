@@ -10,7 +10,7 @@
         <h1>このお申し込みは取り消されています</h1>
         <div class="card">
             <p>お支払いがなかったため、取り消されました。もう一度お申し込みください。</p>
-            <a class="btn" href="{{ route('sheet.create') }}">エクセルを添付して申し込む</a>
+            <a class="btn" href="{{ $entry->isFromForm() ? route('individual-entry.create', ['meet' => $entry->meet_id]) : route('sheet.create') }}">もう一度申し込む</a>
         </div>
     @elseif ($entry->isKonbini() && $entry->payment_instructions_url)
         @include('partials.konbini-awaiting', ['entry' => $entry])

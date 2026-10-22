@@ -68,7 +68,7 @@ class EntryExport
             $row = $i + 2;
             $values = [
                 $i + 1,
-                $e->user->isIndividual() ? ($e->user->team_name ?: '個人') : $e->user->displayName(),
+                $e->user->isIndividual() || $e->user->isGuest() ? ($e->user->team_name ?: '個人') : $e->user->displayName(),
                 $a->last_name,
                 $a->first_name,
                 $a->kana,

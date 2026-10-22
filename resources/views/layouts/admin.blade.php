@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@500;600&display=swap">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=21">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=22">
 </head>
 <body class="admin">
 {{-- 運営専用。申込者向けのサイトとは見た目も導線も分ける --}}

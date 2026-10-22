@@ -201,7 +201,7 @@ class SheetEntryController extends Controller
         }
 
         return redirect()->to(URL::signedRoute('sheet.status', $entry))
-            ->withErrors(['entry' => $entry->isPaid() ? '入金済みです。' : '決済ページの有効期限が切れました。お手数ですが、もう一度エクセルを添付してお申し込みください。']);
+            ->withErrors(['entry' => $entry->isPaid() ? '入金済みです。' : '決済ページの有効期限が切れました。お手数ですが、もう一度お申し込みください。']);
     }
 
     /**
@@ -211,6 +211,11 @@ class SheetEntryController extends Controller
     {
         $this->checkSignature($request);
         if ($this->entries->cancelPending($entry)) {
+            if ($entry->isFromForm()) {
+                return redirect()->route('individual-entry.create', ['meet' => $entry->meet_id])
+                    ->with('status', 'お支払いを中止したため、申込みを取り消しました。もう一度お申し込みください。');
+            }
+
             return redirect()->route('sheet.create')
                 ->with('status', 'お支払いを中止したため、申込みを取り消しました。もう一度エクセルを添付してお申し込みください。');
         }

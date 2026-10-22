@@ -185,7 +185,7 @@ class ProgramWorkbook
                     $a->first_name,
                     $a->kana ? mb_convert_kana($a->kana, 'k') : '',
                     $a->grade ?? '',
-                    $user->isIndividual() ? (string) $user->team_name : $user->displayName(),
+                    $user->isIndividual() || $user->isGuest() ? (string) $user->team_name : $user->displayName(),
                     $a->association ?? '',
                 ];
                 foreach ($values as $c => $value) {

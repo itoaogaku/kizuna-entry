@@ -391,3 +391,12 @@ header.site .btn.secondary { background: transparent; color: #fff; border-color:
   .admin-header nav { width: 100%; overflow-x: auto; flex-wrap: nowrap; white-space: nowrap; gap: 16px; }
 }
 @media print { .admin-header, .admin-strip { display: none !important; } }
+
+/* エントリー受付：団体／個人の大分類 */
+.entry-group { margin: 24px 0 8px; }
+.entry-group h2 { display: flex; align-items: center; gap: 10px; }
+.group-tag { background: var(--brand-ink); color: #fff; border-radius: 6px; padding: 2px 10px; font-size: .85rem; letter-spacing: .1em; }
+.group-tag.individual { background: #b0553b; }
+
+/* hidden 属性は、display を指定した要素（.row など）でも必ず隠す */
+[hidden] { display: none !important; }

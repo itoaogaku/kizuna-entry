@@ -97,7 +97,7 @@ class SheetEntryService
      *
      * @param  list<array<string, mixed>>  $rows  parse() の rows（エラーがないこと）
      */
-    public function submit(User $user, Meet $meet, array $rows, string $method, ?string $sheetPath): Entry
+    public function submit(User $user, Meet $meet, array $rows, string $method, ?string $sheetPath, string $source = Entry::SOURCE_SHEET): Entry
     {
         $athletes = DB::transaction(function () use ($user, $rows) {
             $existing = $user->athletes()->get()->keyBy(fn ($a) => $this->nameKey($a->last_name, $a->first_name));
@@ -128,7 +128,7 @@ class SheetEntryService
             'fee' => $row['fee'],
         ]);
 
-        $entry = $this->entries->createPendingEntry($user, $meet, $selections, $method, Entry::SOURCE_SHEET);
+        $entry = $this->entries->createPendingEntry($user, $meet, $selections, $method, $source);
         $entry->update(['sheet_path' => $sheetPath]);
 
         return $entry;

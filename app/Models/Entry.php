@@ -28,6 +28,9 @@ class Entry extends Model
 
     public const SOURCE_SHEET = 'sheet';
 
+    /** 個人申し込みのフォーム（ログインなし） */
+    public const SOURCE_FORM = 'form';
+
     public const STATUS_LABELS = [
         self::STATUS_PENDING => '決済待ち',
         self::STATUS_PAID => '入金済み',
@@ -75,9 +78,17 @@ class Entry extends Model
         return $this->payment_method === self::METHOD_KONBINI;
     }
 
+    /**
+     * ログインなしの申込み（エクセル添付・個人フォーム）。状態の確認や領収書は署名付きURLで開く。
+     */
     public function isFromSheet(): bool
     {
-        return $this->source === self::SOURCE_SHEET;
+        return in_array($this->source, [self::SOURCE_SHEET, self::SOURCE_FORM], true);
+    }
+
+    public function isFromForm(): bool
+    {
+        return $this->source === self::SOURCE_FORM;
     }
 
     /**

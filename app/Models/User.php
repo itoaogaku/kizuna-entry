@@ -27,6 +27,9 @@ class User extends Authenticatable
     /** エクセル添付だけで申し込んだ人（ログインはしない） */
     public const TYPE_SHEET = 'sheet';
 
+    /** 個人申し込みのフォームで申し込んだ人（ログインはしない） */
+    public const TYPE_GUEST = 'guest';
+
     protected function casts(): array
     {
         return [
@@ -79,12 +82,18 @@ class User extends Authenticatable
      */
     public function isSheetOnly(): bool
     {
-        return $this->type === self::TYPE_SHEET;
+        return in_array($this->type, [self::TYPE_SHEET, self::TYPE_GUEST], true);
+    }
+
+    /** 個人申し込み（フォーム）で申し込んだ人 */
+    public function isGuest(): bool
+    {
+        return $this->type === self::TYPE_GUEST;
     }
 
     public function displayName(): string
     {
-        return $this->isIndividual() ? $this->name : (string) ($this->team_name ?: $this->name);
+        return $this->isIndividual() || $this->isGuest() ? (string) $this->name : (string) ($this->team_name ?: $this->name);
     }
 
     public function typeLabel(): string
@@ -92,6 +101,7 @@ class User extends Authenticatable
         return match ($this->type) {
             self::TYPE_INDIVIDUAL => '個人',
             self::TYPE_SHEET => 'エクセル',
+            self::TYPE_GUEST => '個人',
             default => '団体',
         };
     }
