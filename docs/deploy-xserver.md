@@ -118,9 +118,8 @@ Secrets の `XSERVER_ENV` を書き換えて（「Update」）、`Actions → de
    - URL：`https://taikai.acckizuna.com/stripe/webhook`
    - イベント：`checkout.session.completed`、`checkout.session.async_payment_succeeded`、`checkout.session.async_payment_failed`、`checkout.session.expired`
    - 作成後に表示される署名シークレット（`whsec_…`）を Secrets `XSERVER_ENV` の `STRIPE_WEBHOOK_SECRET` に入れる
-4. `設定 → 決済手段` で
-   - **カード** と **Link** をオンにする（Link をオンにすると、2回目以降はメールアドレスの確認だけでカード情報を入れずに支払える）
-   - **コンビニ決済はオフ** にする（コンビニ払いは KOMOJU で受けるため）
+4. 決済手段はシステム側でカードに限定しているので、ダッシュボードの「決済手段」の設定は変えなくてよい
+   （Wixなど、同じStripeアカウントを使っている他のサイトに影響しないように）。
 5. `設定 → カスタマーへのメール` で「支払い成功」をオンにすると、Stripe からも領収書メールが届きます。
 
 テスト用カード番号 `4242 4242 4242 4242`（有効期限は未来の日付、CVCは任意）で決済を試せます。

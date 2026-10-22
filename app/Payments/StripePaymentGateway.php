@@ -39,9 +39,11 @@ class StripePaymentGateway implements PaymentGateway
             ->values()
             ->all();
 
-        // 支払い方法はStripeダッシュボードの設定に従う（カードとLink。コンビニはKOMOJUで受けるのでオフにしておく）
+        // カードだけで受ける（コンビニはKOMOJU）。Wixでも同じStripeアカウントを使っているので、
+        // ダッシュボードの決済手段の設定は変えずに、ここで指定する。Linkが有効ならカード入力の画面で使える
         $session = $this->stripe()->checkout->sessions->create([
             'mode' => 'payment',
+            'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'customer_email' => $entry->user->email,
             'client_reference_id' => (string) $entry->id,
