@@ -49,13 +49,3 @@
         </select>
     </div>
 </div>
-<div class="row">
-    <div class="field">
-        <label for="birthdate">生年月日 <span class="hint">（任意）</span></label>
-        <input id="birthdate" type="date" name="birthdate" value="{{ old('birthdate', $athlete->birthdate?->format('Y-m-d')) }}">
-    </div>
-    <div class="field">
-        <label for="jaaf_id">陸連登録番号 <span class="hint">（任意）</span></label>
-        <input id="jaaf_id" type="text" name="jaaf_id" value="{{ old('jaaf_id', $athlete->jaaf_id) }}">
-    </div>
-</div>
