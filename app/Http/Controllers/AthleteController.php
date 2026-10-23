@@ -118,7 +118,7 @@ class AthleteController extends Controller
 
         return response()->streamDownload(function () use ($book) {
             IOFactory::createWriter($book, 'Xlsx')->save('php://output');
-        }, '選手登録シート.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+        }, '選手名簿.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
 
     /**

@@ -10,7 +10,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 /**
  * 選手登録用のエクセルシート（ひな形）。
- * 学年・性別・所属陸協・種別は選択式にして、そのまま「選手のまとめて登録」でアップロードできる形にする。
+ * 学年・性別・所属陸協・種別は選択式にして、そのまま「選手名簿エクセルシートでまとめて登録」でアップロードできる形にする。
  */
 class AthleteTemplate
 {
@@ -21,11 +21,11 @@ class AthleteTemplate
     public function build(): Spreadsheet
     {
         $book = new Spreadsheet;
-        $sheet = $book->getActiveSheet()->setTitle('選手登録');
+        $sheet = $book->getActiveSheet()->setTitle('選手名簿');
 
-        $sheet->setCellValue('A1', '選手登録シート（絆記録挑戦会）');
+        $sheet->setCellValue('A1', '選手名簿（絆記録挑戦会）');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->setCellValue('A2', '1行に1人ずつ入力し、「選手のまとめて登録」でこのファイルをアップロードしてください。学年・性別・所属陸協・種別はセルを選ぶと一覧から選べます。フリガナは姓と名の間にスペースを入れてください。');
+        $sheet->setCellValue('A2', '1行に1人ずつ入力し、「選手名簿エクセルシートでまとめて登録」でこのファイルをアップロードしてください。学年・性別・所属陸協・種別はセルを選ぶと一覧から選べます。フリガナは姓と名の間にスペースを入れてください。');
         $sheet->mergeCells('A2:H2');
         $sheet->getStyle('A2')->getAlignment()->setWrapText(true);
         $sheet->getRowDimension(2)->setRowHeight(36);

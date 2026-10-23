@@ -1,17 +1,17 @@
 @extends('layouts.app')
-@section('title', '選手のまとめて登録')
+@section('title', '選手名簿エクセルシートでまとめて登録')
 
 @section('content')
-    <h1>エントリーシート（Excel）で選手をまとめて登録</h1>
+    <h1>選手名簿エクセルシートでまとめて登録</h1>
     <div class="card quick">
         <div>
-            <strong>選手登録用エクセルシート</strong><br>
+            <strong>選手名簿エクセルシート</strong><br>
             <span class="muted">学年・性別・所属陸協・種別は一覧から選べます。入力したら、下の「登録する」からそのままアップロードしてください。</span>
         </div>
-        <a class="btn" href="{{ route('athletes.template-xlsx') }}">選手登録用エクセルシートをダウンロード</a>
+        <a class="btn" href="{{ route('athletes.template-xlsx') }}">選手名簿エクセルシートをダウンロード</a>
     </div>
     <div class="card">
-        <p><strong>上の選手登録用エクセルシート、またはこれまで提出していたエントリーシート（.xlsx）をアップロードできます。</strong><br>
+        <p><strong>上の選手名簿エクセルシート、またはこれまで提出していたエントリーシート（.xlsx）をアップロードできます。</strong><br>
             姓・名・フリガナ・学年・性別・所属陸協・種別 を読み取って選手を登録します。</p>
         <ul class="muted">
             <li>同じ選手が複数の種目で何行かあっても、1人として登録します。</li>
@@ -22,7 +22,7 @@
         <form method="POST" action="{{ route('athletes.import') }}" enctype="multipart/form-data">
             @csrf
             <div class="field">
-                <label for="file">選手登録用エクセルシート・エントリーシート（.xlsx）またはCSV</label>
+                <label for="file">選手名簿エクセルシート・エントリーシート（.xlsx）またはCSV</label>
                 <input id="file" type="file" name="file" accept=".xlsx,.xls,.csv" required>
             </div>
             <div class="actions">

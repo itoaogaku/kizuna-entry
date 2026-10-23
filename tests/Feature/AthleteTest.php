@@ -124,7 +124,7 @@ class AthleteTest extends TestCase
         $path = tempnam(sys_get_temp_dir(), 'athletes').'.xlsx';
         file_put_contents($path, $response->streamedContent());
         $book = IOFactory::load($path);
-        $sheet = $book->getSheetByName('選手登録');
+        $sheet = $book->getSheetByName('選手名簿');
         $this->assertSame(['No', '姓', '名', 'フリガナ', '学年', '性別', '所属陸協', '種別'], array_slice($sheet->rangeToArray('A4:H4')[0], 0, 8));
         $this->assertSame(DataValidation::TYPE_LIST, $sheet->getCell('F6')->getDataValidation()->getType());
 
@@ -132,7 +132,7 @@ class AthleteTest extends TestCase
         IOFactory::createWriter($book, 'Xlsx')->save($path);
 
         $this->actingAs($user)->post(route('athletes.import'), [
-            'file' => new UploadedFile($path, '選手登録シート.xlsx', null, null, true),
+            'file' => new UploadedFile($path, '選手名簿.xlsx', null, null, true),
         ])->assertRedirect(route('athletes.index'));
 
         $this->assertDatabaseHas('athletes', ['user_id' => $user->id, 'last_name' => '高橋', 'grade' => 'M1', 'gender' => 'F', 'association' => '学連', 'category' => '大学生']);

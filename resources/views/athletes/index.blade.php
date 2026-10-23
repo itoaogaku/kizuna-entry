@@ -7,7 +7,7 @@
         <p class="muted">ここに登録した選手が、エントリー画面の一覧に表示されます。卒業・引退した選手は「エントリー対象外」にすると一覧から外れます。</p>
         <div class="actions" style="margin-bottom:16px">
             <a class="btn" href="{{ route('athletes.create') }}">選手を追加</a>
-            <a class="btn secondary" href="{{ route('athletes.import') }}">エントリーシートでまとめて登録</a>
+            <a class="btn secondary" href="{{ route('athletes.import') }}">選手名簿エクセルシートでまとめて登録</a>
             <a class="btn secondary" href="{{ route('athletes.advance') }}">年度更新（学年を上げる）</a>
         </div>
     @else
